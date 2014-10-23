@@ -1,0 +1,558 @@
+*{
+    border-radius: 0px !important;
+}
+
+body{
+    background: #f7f7f7;
+ //   overflow-x: hidden;
+}
+
+iframe{
+    border: 0px;
+}
+
+.topBar{
+    background: #34495E;
+    padding: 10px;
+    height: 45px;
+    border-bottom: 4px solid #16A085;
+}
+
+.footer{
+    padding-top: 47px;
+    padding-bottom: 48px;
+    font-size: 17px;
+    //background: #39b1a4;
+    background: #34495E;
+    text-align: center;
+    font-weight: 300;
+    text-align: center;
+    color: white;
+    display: none;
+    font-family: 'Open Sans', sans-serif;
+    border-top: 4px solid #16A085;
+}
+
+.carousel{
+    height: 500px;
+    overflow: hidden;
+    position: relative;
+}
+
+.carousel .eachcarousel{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 560px;
+}
+
+.carousel .eachcarousel .content{
+    position: absolute;
+    left: 0;
+    top: 170px;
+    width: 100%;
+    text-align: center;
+    font-size: 4rem;
+}
+
+.carousel .eachcarousel .content .heading{
+    position: relative;
+    font-family: "Montserrat", sans-serif;
+    font-size: 11rem;
+    line-height: 7rem;
+    font-weight: bolder;
+    color: rgba(250,250,250,0.9);
+}
+
+.carousel .eachcarousel .content .text{
+    position: relative;
+    font-family: "Open Sans", sans-serif;
+    font-size: 4rem;
+    color: rgba(230,230,230,0.6);
+}
+
+.topdivcarousel{
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 0px;
+    height: 50px;
+    background: rgba(250,250,250,0.4);
+    z-index: 10;
+    font-family: "Montserrat", sans-serif;
+    font-size: 45.5rem;
+    color: rgba(0,0,0,0.15);
+}
+
+.mainheading{
+    background: rgba(240,240,240,0.7);
+    padding: 0.8rem;
+    border: 1px solid rgba(0,0,0,0.07);
+    font-family: "Open Sans", sans-serif;
+    font-size: 1.8rem;
+}
+
+.mainContent{
+    margin: 2rem auto;
+    width: 97%;
+}
+
+.maintext{
+    font-family: "Open Sans", sans-serif;
+    font-size: 1.6rem;
+}
+
+.video{
+    width: 100%;
+}
+
+.viddesc{
+    padding: 1.2rem;
+    background: #f5f5f5;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-top: 0px;
+}
+
+.split{
+    width: 100%;
+}
+
+.split table tr{
+    vertical-align: top;
+}
+
+.details{
+    padding: 2rem;
+}
+
+.details .detail{
+    background: rgba(230,230,230,0.8);
+    color: #777777;
+    font-family: "Montserrat", sans-serif;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-left: 8px solid #009688;
+}
+
+.categories{
+    margin: 1rem auto;
+    position: relative;
+}
+
+.backbar{
+    width: 100%;
+    height: 50px;
+    background: #03a9f4;
+    border-bottom: 9px solid #0288d1;
+    margin-top: -2rem !important;
+}
+
+.categorieslist{
+    margin-top: 10px !important;
+}
+
+.category{
+    margin: auto;
+    width: 90%;
+    position: relative;
+    box-shadow: 0px 4px 8px 2px rgba(0,0,0,0.2);
+    opacity: 0;
+    margin-top: 1rem;
+    overflow: hidden;
+}
+
+.box{
+    width:100%;
+    position: relative;
+}
+
+.topdiv{
+    position: relative;
+    display: block;
+}
+
+.topdiv, .bottomdiv{
+    width: 100%;
+}
+
+.bottomdiv{
+    padding: 2rem;
+    font-family: "Open Sans", sans-serif;
+    font-size: 1.5rem;
+    font-weight: normal;
+    overflow: hidden;
+    position: relative;
+}
+
+.bottomdiv > p{
+    position: absolute;
+    bottom: -0.9rem;
+    left: 0.5rem;
+    font-family: Segoe UI, sans-serif;
+    font-size: 15rem;
+    font-weight: bolder;
+    color: rgba(0,0,0,0.04);
+}
+
+.category .box .topdiv p{
+    position: absolute;
+    left: 0.6rem;
+    bottom: 0.6rem;
+    font-family: "Montserrat", sans-serif;
+    color: #f1f1f1;
+    font-size: 3rem;
+    line-height: 2.5rem;
+    z-index: 5;
+}
+
+.details .detail span.num{
+    font-size: 4rem;
+    color: #E67E22;
+}
+
+.Collage img{
+    opacity:0;
+    box-shadow:0px 3px 4px #dcdcdc;
+    border-radius: 6px;
+    /* 
+    * Change this to try different borders
+    */
+    border:6px solid #FFF;
+}
+ .Collage{
+    /* 
+     * Change this to set the spacing of the images in the grid
+     */
+    padding:10px;
+  }
+
+
+/* EFFECT 2 */
+.effect-2 {
+    -webkit-transform: translateY(200px);
+    -moz-transform: translateY(200px);
+    transform: translateY(200px);
+    -webkit-animation: moveUp ease forwards;
+    -moz-animation: moveUp ease forwards;
+    animation: moveUp ease forwards;
+}
+
+@-webkit-keyframes moveUp {
+    to { -webkit-transform: translateY(0); opacity: 1; }
+}
+
+@-moz-keyframes moveUp {
+    to { -moz-transform: translateY(0); opacity: 1; }
+}
+
+@keyframes moveUp {
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.shop{
+     margin: 1rem auto;
+    width: 90%;
+    position: relative;
+}
+
+.shopitemslist{
+   width: 100%;
+}
+
+.shopitem{
+    float: left;
+    margin-bottom: 0.9rem;
+    width: 24.5%;
+    opacity: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.shopitem.w2{
+    width:49.5%;
+}
+
+.shopitem .itemdesc{
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 1rem;
+    padding-bottom: 0px;
+    background: rgba(200,200,200,0.6);
+    font-size: 1.8rem;
+    font-family: "Open Sans", sans-serif;
+    color: #01579b;
+    opacity: 0;
+    
+    //-webkit-transition:all 0.2s ease-out;
+    //-webkit-transform:scale(0);
+    
+    //-moz-transition:all 0.2s ease-out;
+    //-moz-transform:scale(0);
+}
+
+.itemdesc label{
+    color: #f4511e;
+}
+
+.shopitem .blur{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.1);
+}
+
+.shopitem:hover .blur{
+    -webkit-filter:blur(6px);
+}
+
+.shopitem:hover .itemdesc{
+    //-webkit-transform:scale(1);
+    -webkit-filter:blur(0px);
+    
+     -moz-transform:scale(1);
+    -moz-filter:blur(0px);
+}
+
+.shopitem > .top{
+    width:100%;
+    min-height: 300px;
+}
+
+.shopitem > .bottom{
+    width: 100%;
+    padding: 1.3rem;
+    height: 70px;
+    background: #34495E;    
+}
+
+.itemname, .itemprice{
+    font-size: 1.6rem !important;
+    color: #f1f1f1;
+    line-height: 1.5rem;
+}
+
+.itemprice{
+    color:#ff5722;
+}
+
+h1.bigheading{
+    font-family: Segoe UI, sans-serif;
+    font-weight: bolder;
+    font-size: 23rem;
+    color: rgba(0,0,0,0.2);
+    height: 170px;
+}
+
+.hidediv{
+    height: 50px;
+    width: 100%;
+    background: #f7f7f7;
+    position: absolute;
+    margin-bottom: 50px;
+    box-sizing: border-box;
+}
+
+#alertBox{
+    position: fixed;
+    bottom: -90px;
+    left: calc(50% - 40%);
+    z-index: 10;
+    width: 80%;
+    min-height: 70px;
+    font-size: 1.7rem;
+}
+
+.alert.alert-success{
+    border: 2px solid #27AE60;
+}
+
+.alert.alert-danger{
+    border: 2px solid #E74C3C;
+}
+
+.profile{
+    margin: 1rem auto;
+    width: 90%;
+    position: relative;
+}
+
+.item .listitemdesc{
+    font-size: 1.5rem;
+    font-family: "Open Sans", sans-serif;
+}
+
+.avatar{
+    background: #34495E;
+    background-image: url(/files/images/profile2.jpg);
+    padding: 5rem;
+    padding-left: 0px;
+    border-bottom: 0.8rem solid #0288d1;
+    border-top: 0.8rem solid #0288d1;
+}
+
+.avatar hr{
+    border: 0;
+    border-top: 5px solid rgba(230,230,230,0.09);
+}
+
+.profileimg > img{
+    width: 60%;
+    border-radius: 50% !important;
+    box-shadow: 0px 0px 0px 3px rgba(240,240,240,0.9);
+}
+
+.profilename{
+    font-size: 9rem;
+    line-height: 8.4rem;
+    font-family: "Montserrat", sans-serif;
+    text-transform: uppercase;
+    text-align: right;
+    font-weight: bolder;
+    color: #0288d1;
+}
+
+.profileid{
+    font-family: "Montserrat", sans-serif;
+    font-size: 2.7rem;
+    color: #ff5722;
+    text-align: right;
+}
+
+.shoppinglist .item img{
+    border: 6px solid #f2f2f2;
+}
+
+.customVideo{
+    overflow: hidden;
+    position: relative;
+    width: auto;
+}
+
+.customVideo video{
+    width: 100% !important;
+    padding-bottom: 0px !important;
+    margin-bottom: -1rem;
+    background: transparent url('/files/images/vidbg3_1.png') no-repeat;
+    background-position: center;
+    //background-size: 120 120;
+}
+
+.customVideo .controls{
+    position: absolute;
+    width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
+    //background: #34495E;
+    bottom: 6px;
+    left: -4px;
+    box-sizing: border-box;
+    -webkit-transition:all 0.4s ease-in;
+    -moz-transition:all 0.4s ease-in;
+}
+
+.customVideo .controls table{
+    padding-top: -1rem !important;
+    height: 40px !important;
+}
+
+.customVideo .controls td{
+    border:1px solid transparent;
+    cursor: pointer;
+    height: 40px !important;
+}
+
+.customVideo .controls td:nth-child(3){
+    text-align: center;
+    padding-left: 0.3rem;
+}
+
+.customVideo .controls .vidTrack{
+    width: 100%;
+    height: 12px;
+    background: #ECF0F1;
+    position: relative;
+    border-radius: 15px;
+    padding-right: 0.6rem;
+    margin-top: 3px;
+    overflow: hidden;
+}
+
+.customVideo .controls .audTrack{
+    width: 100%;
+    height: 12px;
+    background: #ECF0F1;
+    position: relative;
+    border-radius: 15px;
+    padding-right: 0.6rem;
+    margin-top: 3px;
+    overflow: hidden;
+}
+
+.customVideo .controls .audTrack .vidTrackFill, .customVideo .controls .vidTrack .vidTrackFill{
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 0%;
+    height: 14px;
+    border-radius: 15px;
+    background: #16A085;
+}
+
+.volume, .fullscreen{
+    float: right;
+}
+
+.controls .time{
+    font-family: "Ubuntu", sans-serif !important;
+    font-size: 1.4rem;
+    text-align: center;
+    font-weight: normal;
+    //margin-top: 1.5rem;
+    color: #27AE60 !important;
+}
+
+.navbar{
+    width: 100%;
+    height: 50px;
+    background: #009688;
+    border-left: 0.8rem solid #1ABC9C;
+}
+
+.navbar li{
+    font-size: 1.6rem;
+    min-width: 70px;
+    display: inline-block;
+    height: 50px;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.navbar li.active{
+    background: #26a69a;
+}
+
+.navbar li a{
+    color: #f1f1f1;
+    line-height: 40px;
+    text-transform: uppercase;
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+}
+ 
+::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.16);
+}
+ 
+::-webkit-scrollbar-thumb {
+    background: #455a64;
+    width: 1.3rem;
+}

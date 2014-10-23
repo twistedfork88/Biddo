@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+    <!-- MEMO: update me with `git checkout gh-pages && git merge master && git push origin gh-pages` -->
+    <head>
+        <meta charset="utf-8">
+        <title>SAP Biddo</title>
+        
+        <link href='//fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
+        <link href='//fonts.googleapis.com/css?family=Montserrat:700' rel='stylesheet' type='text/css'>  
+        
+        <link rel="shortcut icon" href="https://cdn2.iconfinder.com/data/icons/money-finance/512/auction-hammer-512.png">
+        <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+        <link href="./files/dist/css/ripples.min.css" rel="stylesheet">
+        <link href="./files/dist/css/material-wfont.min.css" rel="stylesheet">
+        <link href="//fezvrasta.github.io/snackbarjs/dist/snackbar.min.css" rel="stylesheet">
+        <link href="./files/css/components.css" rel="stylesheet">
+    </head>
+    <body>
+        <div id='topbar'></div>
+        
+        <div id="maincontent"></div>        
+        <div id="modal"></div>
+        
+        <div id="alertBox"></div>
+        
+        
+        <div id="footer"></div>
+        <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="./files/dist/js/ripples.min.js"></script>
+        <script src="./files/dist/js/material.min.js"></script>
+        <script src="//fezvrasta.github.io/snackbarjs/dist/snackbar.min.js"></script>
+        
+        <script src="../react/build/react.js"></script>
+        <script src="../react/build/JSXTransformer.js"></script>
+        <script src="./files/js/masonry.min.js"></script>
+        <script src="./files/js/Constants.js"></script>
+        <script type="text/jsx" src="./files/js/components.js"></script>
+        
+        <script type="text/jsx">
+             /** @jsx React.DOM */
+            var topbar = document.getElementById('topbar');
+            var content = document.getElementById('maincontent');
+            var footer = document.getElementById('footer');
+            
+            $.ajax({
+                url: "http://localhost:3000/getshoppingitems"
+            })
+            .done(function(response){
+                response = JSON.parse(response);
+                if(response.statusCode === 200){
+                    var shopitems = response.data;
+                    var finItems = [];
+                    
+                    $.ajax({
+                        url:"http://localhost:3000/getshopitemsforuser/I068574"
+                    })
+                    .done(function(response2){
+                        response2 = JSON.parse(response2);
+                        if(response2.statusCode === 200){
+                            var shopped = response2.message.userItemsBought;
+                            shopitems = shopitems.map(function(item){
+                                if(shopped.indexOf(item.itemId) > -1)item.isShopped = true;
+                                return item;
+                            });
+                            React.renderComponent(<Shop items={shopitems} />, content);
+                            React.renderComponent(<FooterComponent />, footer);
+                        }
+                    });
+                }
+            });
+            //React.renderComponent(<TopBarComponent />, topbar);
+            
+        </script>
+    
+    </body>
+</html>
