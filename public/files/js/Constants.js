@@ -16,4 +16,4 @@ var ButtonText = {
     undoPurchase: 'UNDO-PURCHASE'
 }
 
-var SERVER_URL = "http://10.52.99.54:3000/";
+var SERVER_URL = "http://localhost:3000/";

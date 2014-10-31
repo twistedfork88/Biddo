@@ -67,7 +67,7 @@
         h1.bigheading{
             font-family: Segoe UI, sans-serif;
             font-weight: bolder;
-            font-size: 19rem;
+            font-size: 19rem !important;
             color: rgba(0,0,0,0.2);
             height: 170px;
             overflow: hidden;
@@ -95,49 +95,7 @@
             <h1 style="margin-top:-10px">
                 We're sorry, but <span>SAP BIDDO</span> doesn't work with the browser you are currently using. Yeah too bad. But it's not the end of the world !
             </h1>
-            <h2>kindly switch to any of the following browsers:</h2>
-            <div class="browsers">
-                <table style="margin:auto;width:70%">
-                    <tr>
-                        <td style="text-align:center" width='33%'>
-                            <div>
-                                <img src="./files/images/ie.png" width="40%" />
-                                <a href="http://www.microsoft.com/en-us/download/internet-explorer-10-details.aspx" target="_blank">
-                                    <p class="name">Internet Explorer 10+</p>
-                                </a>
-                            </div>
-                        </td>
-                        <td style="text-align:center" width='33%'>
-                            <div>
-                                <img src="./files/images/chrome.png" width="40%" />
-                                <a href="http://www.google.com/chrome/" target="_blank">
-                                    <p class="name">Google Chrome</p>
-                                </a>
-                            </div>
-                        </td>
-                        <td style="text-align:center" width='33%'>
-                            <div>
-                                <img src="./files/images/firefox.png" width="40%" />
-                                <a href="https://www.mozilla.org/en-US/firefox/new/" target="_blank">
-                                    <p class="name">Mozilla Firefox</p>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
+            <h2>kindly switch to Chrome browser.</h2>
         </div>
-        <script src="./files/js/jquery-1.10.2.min.js"></script>
-        <script>
-            $(document).ready(function(){
-                $('td div')
-                    .mouseenter(function(){
-                        $(this).animate({'margin-top': '-10px'}, 300);
-                    })
-                    .mouseleave(function(){
-                        $(this).animate({'margin-top': '0px'}, 300);
-                    });
-            });
-        </script>
     </body>
 </html>

@@ -403,7 +403,7 @@ var LoginPageComponent = React.createClass({
                                     <div style={{margin:'auto', width:'80%', padding:'2rem', background:'#fefefe', marginTop:'-1.5rem', position:'absolute', border: '1px solid rgba(0,0,0,0.06)', borderTop:'0px'}}>
                                         <p className='loginInput'>
                                             <input type="text" className='inp' id="username" />
-                                            <label className='fakePlaceholder'>username</label>
+                                            <label className='fakePlaceholder'>user id</label>
                                             <span className='belowborder'></span>
                                             <span className="highlight"></span>
                                         </p>
@@ -1117,7 +1117,7 @@ var ItemComponent = React.createClass({
        
        //disable the <PURCHASE> button in case size is not selected
        if(this.ifItemHasSize && !this.itemSize){
-            $(btn).addClass('disabled');    
+            //$(btn).addClass('disabled');    
        }       
       
        /** render modal for purchase */
@@ -1150,7 +1150,7 @@ var ItemComponent = React.createClass({
             $(DOM).find('.size').css('background', '#00bcd4');
             $(this).css('background', '#01579b');
             that.itemSize = $(this).text();
-            $(btn).removeClass('disabled'); 
+            //$(btn).removeClass('disabled'); 
        });       
            
    },   
@@ -1785,7 +1785,11 @@ var UserAvatarList = React.createClass({
                     var count = 0;
                     var interval = setInterval(function(){
                         
-                        $(userimgs[count++]).addClass('memberanimate').css('-webkit-transform', 'scale(1)');
+                        $(userimgs[count++])
+                        .addClass('memberanimate')
+                        .css('-webkit-transform', 'scale(1)')
+                        .css('-moz-transform', 'scale(1)');
+                        
                         if(count === userimgs.length){
                             clearInterval(interval);
                             return;

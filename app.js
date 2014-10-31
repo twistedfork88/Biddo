@@ -66,10 +66,32 @@ app.configure(function(){
       
   app.use(function(req, res, next){
       
+      var userAgent = req.headers['user-agent'];  
+      console.log(userAgent);
+      
+      if(req.url.indexOf("/activateuser") > -1){
+        if(userAgent.indexOf("Chrome") < 0 && userAgent.indexOf("Firefox") < 0){
+            //redirect to not-supported page
+            res.redirect('/unsupported');
+            return;
+        } 
+      }
+      
       var path = req.path;
       var match = path.match(/\/login|\/profile|\/shop|\/index|\/bid/);
+      
       if(match && match.length){
             console.log(">> received request for "+req.url);
+          
+            //set no-cache header
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+       
+            //bad way => check browser based on user-agent header
+            if(userAgent.indexOf("Chrome") < 0 && userAgent.indexOf("Firefox") < 0){
+                //redirect to not-supported page
+                res.redirect('/unsupported');
+                return;
+            }
             
             /** set user information in the request session */
             if(!req.session || (req.session && (!req.session.user || !req.session.username || !req.session.token))){
@@ -156,24 +178,11 @@ app.configure(function(){
                 }
             }
             else{
-            
-                var userAgent = req.headers['user-agent'];
-                console.log(userAgent);
-
-                //bad way => check browser based on user-agent header
-                if(
-                    userAgent.indexOf("Chrome") > -1 || 
-                    userAgent.indexOf("Firefox") > -1 || 
-                    userAgent.indexOf("MSIE 10") > -1 || 
-                    (userAgent.indexOf('Trident') > -1 && (userAgent.indexOf('rv:11') > -1))
-                ){
-                    if(req.url!=='/login')
-                        next();
-                    else res.redirect('/index');
-                }
+                if(req.url!=="/login")   
+                    next();
                 else{
-                    //redirect to not-supported page
-                    res.redirect('/unsupported');
+                    res.redirect('/index');
+                    return;
                 }
             }
       }

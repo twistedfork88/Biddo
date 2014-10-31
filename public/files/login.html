@@ -74,9 +74,13 @@
             .loginInput input{
                 background: transparent !important;
                 //border-bottom: 1px solid rgba(240,240,240,0.6);
-                font-family: "Montserrat", sans-serif;
+                //font-family: "Montserrat", sans-serif;
                 font-size: 1.6rem;
                 color: #5677fc;
+            }
+            
+            .loginInput input:invalid{
+                box-shadow: 0px 0px 0px transparent;
             }
 
             .loginInput .belowborder{
@@ -110,8 +114,9 @@
                 color: #009688;
                 pointer-events: none;
                 display: inline-block !important;
-                font-family: "Open Sans", sans-serif;
-                font-size: 1.6rem;
+                //font-family: "Open Sans", sans-serif;
+                font-size: 1.8rem;
+                font-weight: normal;
                 -webkit-transition: all 0.14s ease-out;
                 -moz-transition: all 0.14s ease-out;
             }
@@ -193,6 +198,13 @@
                 line-height: 1.5rem;
             }
             
+            .inval{
+                border: 0px !important;
+                outline: none !important;
+                //border-bottom:1px solid #E74C3C !important;
+                color: red !important;
+            }
+            
         </style>
     </head>
     <body>
@@ -223,14 +235,14 @@
                                             </tr>
                                         </table><br>
                                         <p class='desc' style="width:90%;">
-                                            Use your <b>I/C number</b> as the <code>username</code> and your official SAP <code>email</code> to sign up.
+                                            Use your <b>I/C number</b> as the <code>user id</code> and your official SAP <code>email</code> to sign up.
                                         </p>
                                         <p class="infobar success" id="info" style="width:90%;">An email has been sent to the email id provided. Kindly activate the registration by accessing the link in the email.</p> 
                                         <p class="infobar error" id="err">Oops ! something went wrong. Please try again.</p> 
                                     </p>
                                 </td>
                                 <td>
-                                    <form method='POST' id='signupForm'>
+                                    <form method='POST' id='signupForm' autocomplete="off">
                                         <table width='100%'>
                                             <tr valign='top'>
                                                 <td>
@@ -239,13 +251,13 @@
                                                     </div>
                                                     <p class='loginInput'>
                                                     <p class='loginInput'>
-                                                        <input type='text' id='userid' required />
-                                                        <label class='fakePlaceholder'>Username (e.g. I999888)</label>
+                                                        <input type='text' id='userid' required pattern="I[0-9]{6}|C[0-9]{6}" />
+                                                        <label class='fakePlaceholder'>user id (e.g. I999888)</label>
                                                         <span class='belowborder' style="bottom:0px"></span>
                                                         <span class='highlight'></span>
                                                     </p>
                                                      <p class='loginInput'>
-                                                        <input type='email' id='email' required />
+                                                        <input type='email' id='email' required pattern=".{1,}@sap.com" />
                                                         <label class='fakePlaceholder'>Email (e.g. johndoe@sap.com)</label>
                                                         <span class='belowborder' style="bottom:0px"></span>
                                                         <span class='highlight'></span>
@@ -312,7 +324,18 @@
             $(document).ready(function(){
                 
                 //paper element animation
-                $('#modalBox input')
+                $('.loginInput input')
+                    .bind('invalid', function(e) {
+                        e.target.setCustomValidity("");
+                        if (!e.target.validity.valid) {
+                            console.log('found invalid');
+                            $(e.target).addClass('inval');
+                            //e.target.setCustomValidity("This field cannot be left blank");
+                        } else {
+                            console.log('found valid');
+                            //$(e.target).removeClass('invalid');
+                        }
+                    })
                     .bind('focus', function(evt){
                         console.log("in focus...");
                         $(evt.target).parent().find('.belowborder').addClass('belowborderanimate');
@@ -342,15 +365,15 @@
                     if(validity){
                         
                         $(this).addClass('disabled');
-                        $('.waitdiv').css('opacity', 1);
+                        $('#modalBox .waitdiv').css('opacity', 1);
                         
-                        var url = "http://10.52.99.54:3000/createuser?user="+$('#userid').val()+"&pass="+$('#signPass').val()+"&email="+$('#email').val();
+                        var url = "http://localhost:3000/createuser?user="+$('#userid').val()+"&pass="+$('#signPass').val()+"&email="+$('#email').val();
                         $.ajax({
                             url: url,
                             type: 'POST'
                         })
                         .done(function(response){
-                            $('.waitdiv').css('opacity', 0);
+                            $('#modalBox .waitdiv').css('opacity', 0);
                             
                             response = JSON.parse(response);
                             if(response.statusCode === 200){

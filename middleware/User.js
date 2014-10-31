@@ -123,9 +123,9 @@ exports.UserOps.prototype = {
         
         var dataString = querystring.stringify(dataToSend);        
         var httpOptions = {
-            host: '10.52.99.54',
-            port: 8177,
-            path: '/Letter_Generation2/DaaSservlet',
+            host: '10.52.67.63',
+            port: 8080,
+            path: '/BIDDO/Servlet',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -148,6 +148,12 @@ exports.UserOps.prototype = {
                callback(responseObj);
             });
         });
+        
+        //catch connection exceptions
+        postReq.on('error', function(err){
+            console.log(">> error during communication with MAIL server.\n"+err);     
+        });
+        
         postReq.write(dataString);
         postReq.end();
     },
