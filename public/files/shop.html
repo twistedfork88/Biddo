@@ -17,7 +17,7 @@
     </head>
     <body>
         <div id='topbar'></div>
-        
+        <div id="waitdiv"></div>
         <div id="maincontent"></div>        
         <div id="modal"></div>
         
@@ -40,11 +40,12 @@
         <script type="text/jsx">
              /** @jsx React.DOM */
             var topbar = document.getElementById('topbar');
+            var wait = document.getElementById('waitdiv');
             var content = document.getElementById('maincontent');
             var footer = document.getElementById('footer');
             
             $.ajax({
-                url: "http://localhost:3000/getshoppingitems"
+                url: SERVER_URL+"getshoppingitems"
             })
             .done(function(response){
                 response = JSON.parse(response);
@@ -53,23 +54,31 @@
                     var finItems = [];
                     
                     $.ajax({
-                        url:"http://localhost:3000/getshopitemsforuser/I068574"
+                        url: SERVER_URL+"getshopitemsforuser/I068574"
                     })
                     .done(function(response2){
+                    
+                        //remove the wait component
+                        React.unmountComponentAtNode(wait);
+                    
                         response2 = JSON.parse(response2);
                         if(response2.statusCode === 200){
                             var shopped = response2.message.userItemsBought;
-                            shopitems = shopitems.map(function(item){
-                                if(shopped.indexOf(item.itemId) > -1)item.isShopped = true;
-                                return item;
-                            });
-                            React.renderComponent(<Shop items={shopitems} />, content);
+                            if(shopped && shopped.length > 0){
+                                shopitems = shopitems.map(function(item){
+                                    if(shopped.indexOf(item.itemId) > -1)item.isShopped = true;
+                                    return item;
+                                });
+                            }
+                            else shopped = [];
+                            React.renderComponent(<Shop items={shopitems} useritems={shopped} />, content);
                             React.renderComponent(<FooterComponent />, footer);
                         }
                     });
                 }
             });
             //React.renderComponent(<TopBarComponent />, topbar);
+            React.renderComponent(<WaitIconComponent message={"please wait... fetching the shopping items."} />, wait);
             
         </script>
     

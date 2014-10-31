@@ -1,28 +1,37 @@
 /** @jsx React.DOM */
 
-/** MIXINS */
+//|------------------------------------------|
+//|                                          |  
+//|              REACT MIXINS                |   
+//|                                          |   
+//|------------------------------------------|
 
-/** WebSocket mixin */
+/*
+ * WebSocket mixin
+ */
 var WebSocketMixin = {
     ws: null,
     isConnected: false,
     isWebSocketSupported: false,
     onMessageCallback: null,
-    componentDidMount: function(){
-        this.checkWebSocketSupport();
-    },
     checkWebSocketSupport: function(){
         if("WebSocket" in window){
             this.isWebSocketSupported = true;
         }
     },
     createConnection: function(config){
+        this.checkWebSocketSupport();
         if(this.isWebSocketSupported){
-            this.ws = new WebSocket(config.url);
-            this.ws.onopen = this.onConnect;
-            this.ws.onmessage = this.onMessage;
-            this.ws.onerror = this.onError;
-            this.onMessageCallback = config.onMessageCallback;
+            try{
+                this.ws = new WebSocket(config.url);
+                this.ws.onopen = this.onConnect;
+                this.ws.onmessage = this.onMessage;
+                this.ws.onerror = this.onError;
+                this.onMessageCallback = config.onMessageCallback;
+            }
+            catch(exception){
+                alert("ERROR WebSocket:: Could not initialize the websocket instance.");
+            }
         }
         else alert("Your browser doesn't support websockets. Kindly upgrade to IE10 or use Chrome/Firefox");
     },
@@ -48,24 +57,73 @@ var WebSocketMixin = {
     }
 }
 
-/** XHR request mixin */
+/*
+ * XHR request mixin
+ */
 var AjaxMixin = {
     configuration: null,
     makeXHR: function(configuration){
         this.configuration = configuration;
-        var self = this;
-        $.ajax({
-            url: configuration.url,
-            data: configuration.data,
-            type: configuration.type
-        })
-        .done(function(response){
-            self.configuration.callback.call(null, response);
-        });
+        if(this.checkValidityOfXHRRequest()){
+            var self = this;
+            $.ajax({
+                url: configuration.url,
+                data: configuration.data,
+                type: (configuration.type)?configuration.type:'GET', //defaults to GET
+                beforeSend: function(xhr){
+                    /** append all headers for the XHR request */
+                    var headers = self.configuration.headers;
+                    if(headers){
+                        for(var headerKey in headers)
+                            xhr.setRequestHeader(headerKey, headers[headerKey]);
+                    }
+                },
+                timeout: 6000 //timeout of 6 seconds to perform the operation
+            })
+            .done(function(response){
+                self.configuration.callback.call(null, response);
+            })
+            .fail(function(){
+                self.configuration.callback.call(
+                    null, 
+                    JSON.stringify({ 
+                        statusCode: 500, 
+                        message: 'The XHR call could not be performed.' 
+                    })
+                );
+            });
+        }
+        else alert("ERROR:: Malformed XHR request parameters. Please provide a valid XHR parameters object.");
+    },
+    checkValidityOfXHRRequest: function(){
+        if(!this.configuration.url||!this.configuration.callback) return false;
+        return true;
     }
 }
 
-/** COMPONENTS */
+var CookiesMixin = {
+    getCookieDetails: function(cookieName){
+        var cookies = document.cookie.split(';');
+        var finalcookies = {};
+        var count = 0;
+        for(var i=0;i<cookies.length;i++){
+            var cookie = cookies[i];
+            if(cookie.indexOf(cookieName) > -1){
+                var parts = cookie.split('=');
+                finalcookies[parts[0].trim()] = decodeURI(parts[1]);
+                break;
+            }
+        }
+        return finalcookies;
+    }
+}
+
+//|------------------------------------------|
+//|                                          |  
+//|              WEB COMPONENTS              |   
+//|                                          |   
+//|------------------------------------------|
+
 
 /*
  * Top bar component
@@ -75,6 +133,51 @@ var TopBarComponent = React.createClass({
         return (
             <div className='topBar'></div>
         );
+    }
+});
+
+var TopFixedComponent = React.createClass({
+    mixins:[AjaxMixin, CookiesMixin],
+    render: function(){
+        return(
+            <div className='topbarfixed'>
+                <table style={{"margin-top":"-1.9rem", "width":"100%"}}>
+                    <tr>
+                        <td>
+                            <h2>BIDDO</h2>
+                        </td>
+                        <td  width='5%'>
+                            <a href="/contact">contact</a>
+                        </td>
+                        <td width='5%'>
+                            <a href="#" id='logout' style={{color: '#e51c23'}}>logout</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        );
+    },
+    componentDidMount: function(){
+        var self = this;
+        $('#logout').click(function(evt){
+            evt.preventDefault();
+            var config = {
+                url: SERVER_URL+'logout',
+                type: 'POST',
+                headers:{
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token-Header': self.getCookieDetails('X-CSRF-Token')['X-CSRF-Token']
+                },
+                callback: self.postLogout
+            }
+            self.makeXHR(config);
+        });
+    },
+    postLogout: function(response){
+        response = JSON.parse(response);
+        if(response.statusCode === 200)
+            window.location.href = '/login';
+        else alert(response.message);
     }
 });
 
@@ -108,24 +211,229 @@ var FooterComponent = React.createClass({
     }   
 });
 
+/*
+ * Wait Icon component
+ */
+var WaitIconComponent = React.createClass({
+    render: function(){
+        return(
+            <div className='waitBlock'>
+                <div style={ { width:'70px', float:'left' } }>
+                    <div className='bounceContainer'>
+                        <div className='double-bounce1'></div>
+                        <div className='double-bounce2'></div>
+                    </div>
+                </div>
+                <span>{this.props.message}</span>
+            </div>
+        );
+    }
+});
+
+/*
+ * Navigation bar component
+ */
 var NavBarComponent = React.createClass({
+    mixins:[AjaxMixin, CookiesMixin],
     componentDidMount: function(){
         var DOM = this.getDOMNode();
+        var self = this;
         $(DOM).find('li a').click(function(){
             var href = $(this).attr('href');
-            window.location.href = href;
+            
+            if(href!=='#')
+                window.location.href = href;
+            else{
+                if($(this).attr('id') === 'logout'){
+                    //logout click
+                    var config = {
+                        url: SERVER_URL+'logout',
+                        type: 'POST',
+                        headers:{
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRF-Token-Header': self.getCookieDetails('X-CSRF-Token')['X-CSRF-Token']
+                        },
+                        callback: self.postLogout
+                    }
+                    self.makeXHR(config);
+                }
+            }
         });
+    },
+    postLogout: function(response){
+        response = JSON.parse(response);
+        if(response.statusCode === 200){
+            window.location.href = "/login";
+        }
+        else alert(response.message);
     },
     render: function(){
         
         var lis = this.props.items.map(function(item){
             return <li className={item.class}><a href={item.href} data-toggle='tab'>{item.name}</a></li>;
         });
+        lis.push(<li className="" style={{float:'right'}}><a href="#" data-toggle='tab' id='logout'>&nbsp;&nbsp;logout&nbsp;&nbsp;</a></li>);
         
         return(
-            <ul className="navbar" style={{"margin-bottom": "5px;"}}>
+            <ul className="navbar" style={{"margin-bottom": "5px"}}>
                 {lis}
             </ul>
+        );
+    }
+});
+
+var LoginPageComponent = React.createClass({
+    mixins:[AjaxMixin],
+    componentDidMount: function(){
+        var DOM = this.getDOMNode();
+        $(DOM).find('.inp')
+            .bind('focus', function(evt){
+                $(evt.target).parent().find('.belowborder').addClass('belowborderanimate');
+                $(evt.target).parent().find('.fakePlaceholder').addClass('fakeAnimate');
+            })
+            .bind('blur', function(e) { 
+                console.log("blurred away ");
+                 console.log($(e.target)[0])
+                if (!e.target.checkValidity()) { 
+                    console.log('doing custom error handling'); 
+                }
+                else $(e.target).removeClass('inval');
+
+                $(e.target).parent().find('.belowborder').removeClass('belowborderanimate');
+                if($(e.target).val()==="")
+                $(e.target).parent().find('.fakePlaceholder').removeClass('fakeAnimate');
+            }); 
+        
+        var loginSecDiv = $('.login > div:nth-child(2)');
+        var wid = $(loginSecDiv).width()/2;
+        var wid2 = $(DOM).find('.login').width()/2;
+        $(loginSecDiv).css('left', (wid2-wid)/2+14);
+        
+        //animate the image and heading
+        $(DOM).find('.loginholder').css('opacity', 0).css('margin-left','2rem');
+        var ps = $(DOM).find('.display > p');
+        $(ps[0]).find('img').css('opacity', '0');
+        $(ps[1]).css('opacity', '0');
+        
+        setTimeout(function(){
+            $(ps[0]).find('img').animate({
+                marginTop: 0,
+                opacity:1
+            }, 300);
+        }, 600);
+        
+        setTimeout(function(){
+            $(ps[1]).animate({
+                marginTop: 0,
+                opacity:1
+            }, 300);
+        }, 900);
+        
+        setTimeout(function(){
+            $(DOM).find('.loginholder').animate({
+                marginLeft: 0,
+                opacity:1
+            }, 300);
+        }, 1300);
+        
+        var self = this;        
+        //login button click event handler
+        $('#loginbtn').click(function(){
+            
+            var user = $('#username').val();
+            var pass = $('#password').val();
+            
+            if(user && pass){
+                
+                $(this).addClass('disabled');
+                $(DOM).find('.waitdiv').css('opacity', 1)
+                
+                var config = {
+                    url: SERVER_URL+'check',
+                    type: 'POST',
+                    data: {
+                        user: user,
+                        pass: pass
+                    },
+                    callback: self.postLoginCheck,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                };
+                
+                self.makeXHR(config);
+            }
+            else $(DOM).find('.resMsg').text("Please provide your login credentials to continue.").css('opacity', 1);
+        });
+    },
+    postLoginCheck: function(response){
+        response = JSON.parse(response);
+        if(response.statusCode == 200){
+            window.location.href = '/index';
+        }
+        else{
+            $('#loginbtn').removeClass('disabled');
+            $(this.getDOMNode()).find('.waitdiv').css('opacity', 0);
+            $(this.getDOMNode()).find('.resMsg').text(response.message).css('opacity', 1);
+        }
+    },
+    newuser: function(evt){
+        evt.preventDefault();
+        $('#myModal').modal('show');
+    },
+    render: function(){
+        return(
+            <div className='logindiv'>
+                <table width='100%'>
+                    <tr>
+                        <td width='40%'>
+                            <div className='display'>
+                                <p>
+                                    <img src='./files/images/SAP_Logo_new.png' width='25%' style={{marginTop: '-8rem', marginLeft:'2rem'}} />
+                                </p>
+                                <p style={{marginTop: '3rem'}}>BIDDO</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div className='loginholder'>
+                                <div className='login'>
+                                    <div className='topdiv'>
+                                        <h1 style={{color:'#f2f2f2', marginTop:'-0.2rem'}}>welcome</h1>
+                                    </div>
+                                    <div style={{margin:'auto', width:'80%', padding:'2rem', background:'#fefefe', marginTop:'-1.5rem', position:'absolute', border: '1px solid rgba(0,0,0,0.06)', borderTop:'0px'}}>
+                                        <p className='loginInput'>
+                                            <input type="text" className='inp' id="username" />
+                                            <label className='fakePlaceholder'>username</label>
+                                            <span className='belowborder'></span>
+                                            <span className="highlight"></span>
+                                        </p>
+                                        <p className='loginInput'>
+                                            <input type="password" className='inp' id="password" />
+                                            <label className='fakePlaceholder'>password</label>
+                                            <span className='belowborder'></span>
+                                            <span className="highlight"></span>
+                                        </p>
+                                        <span className='resMsg' style={{opacity:0}}>Invalid login credendials</span>
+                                        <br/>
+                                        <table width='100%'>
+                                            <tr valign='top'>
+                                                <td width='23%'>
+                                                    <button type='button' className='btn btn-primary' id='loginbtn'>login</button>
+                                                </td>
+                                                <td>
+                                                    <div className='waitdiv' style={{marginTop:'-2rem',opacity:0}}><WaitIconComponent message={""} /></div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <br/><br/>
+                                        <p>New User? <a href='' onClick={this.newuser}>register</a></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>    
+            </div>
         );
     }
 });
@@ -163,7 +471,14 @@ var CarouselComponent = React.createClass({
         return(
         <div className='carousel'>
             <div className='eachcarousel'>
-                <img src='http://cdn.thegadgetflow.com/wp-content/uploads/2014/09/cogito-pop-gadget-flow1.jpeg'/> 
+                
+                <img src='http://cdn.thegadgetflow.com/wp-content/uploads/2014/10/31.jpg'/> 
+                <div className='content'>
+                    <p className='heading'>welcome</p>
+                    <small className='text'>it's all fresh and new</small>
+                    <br/>
+                    <img src='http://www.clipartbest.com/cliparts/zxi/gk6/zxigk6pcA.png' width='50px' />
+                </div>
            </div>
             <div className='eachcarousel'>
                 <img src='http://cdn.thegadgetflow.com/wp-content/uploads/2014/09/Travel-Gadgets.jpg'/>    
@@ -187,7 +502,7 @@ var CarouselComponent = React.createClass({
                 <img src='http://cdn.thegadgetflow.com/wp-content/uploads/2014/09/slider11.jpg'/> 
                 <div className='content'>
                     <p className='heading'>meet your inevitable must haves</p>
-                    <small className='text'>simple, emotional and iconic</small>
+                    <small className='text'>simple, elegant and iconic</small>
                     <br/>
                 </div>
             </div>
@@ -266,7 +581,9 @@ The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for t
     }
 });
         
-        
+/*
+ * Google Map component
+ */        
 var MapComponent = React.createClass({
         render: function(){
             return(
@@ -290,7 +607,10 @@ var MapComponent = React.createClass({
             marker.setMap(map);
         }
 });
-    
+  
+/*
+ * Image collage component
+ */
 var CollageComponent = React.createClass({
     render: function(){
         return(
@@ -309,6 +629,7 @@ var CollageComponent = React.createClass({
             'effect' : "effect-2"
         });
         
+        /** small hack for firefox */
         if(navigator.userAgent.indexOf('Firefox') > -1)
             $('.Collage img').css('transform', 'translateY(0)').css('opacity', 1);
     }
@@ -318,6 +639,26 @@ var CollageComponent = React.createClass({
  * Categories component
 */
 var Categories = React.createClass({
+    getCookieDetails: function(){
+        var cookies = document.cookie.split(';');
+        var finalcookies = {};
+        var count = 0;
+        for(var i=0;i<cookies.length;i++){
+            var cookie = cookies[i];
+            if(cookie.indexOf('X-request-username') > -1){
+                var parts = cookie.split('=');
+                finalcookies[parts[0].trim()] = decodeURI(parts[1]);
+                ++count;
+            }
+            else if(cookie.indexOf('X-request-user') > -1){
+                var parts = cookie.split('=');
+                finalcookies[parts[0].trim()] = decodeURI(parts[1]);
+                ++count;
+            }
+            if(count === 2)break;
+        }
+        return finalcookies;
+    },
     componentDidMount: function(){
         var catDOM = $(this.getDOMNode()).find('.category');
         var catWidth = $(catDOM).width();
@@ -327,6 +668,11 @@ var Categories = React.createClass({
         $(catDOM).find('.bottomdiv').height(catWidth*0.5);
         
         var boxHeight = $(catDOM).find('.topdiv').height();
+        
+        //set the username
+        var cookies = this.getCookieDetails();
+        console.log(cookies)
+        $('.loggedusername').text(cookies['X-request-user']);        
         
         var count = 0;
         var interval = setInterval(function(){
@@ -339,8 +685,8 @@ var Categories = React.createClass({
             $(catDOM[count++]).animate({
                 opacity:1,
                 marginTop:0
-            }, 150);
-        }, 400);
+            }, 200);
+        }, 150);
         
         var flag = -1;
         var factor1 = 0.5;
@@ -433,7 +779,7 @@ var Categories = React.createClass({
                                         <div className='box'>
                                             <div className='topdiv' style={ { background: 'url(http://4.bp.blogspot.com/-ci8zjNrp50I/U_yCxyehuzI/AAAAAAAADX4/uiAIDRcpUB4/s1600/ahagzjsozh.jpg)' }}>
                                                 <img src='http://www.clipartbest.com/cliparts/zxi/gk6/zxigk6pcA.png' width='30px' style={ { marginTop: '1rem', marginLeft:'1rem' } }/>
-                                                <p>lionel messi</p>
+                                                <p className='loggedusername'></p>
                                             </div>
                                             <div className='bottomdiv'>
                                                 your profile details. shows your bidding and purchasing history at SAP Biddo.
@@ -452,25 +798,171 @@ var Categories = React.createClass({
     }
 });
 
+var AdminContentComponent = React.createClass({
+    mixins:[AjaxMixin],
+    componentDidMount: function(){
+        
+        var itemslist = "";
+        $('select').on('change', function(evt){
+            var val = $(evt.target).val();
+            if(val === "shopping items list"){
+                itemslist = "shopping";
+                $('#refreshcache').removeClass('disabled');
+            }
+            else if(val === "bidding items list"){
+                itemslist = "bidding";
+                $('#refreshcache').removeClass('disabled');
+            }
+            else{
+                if(val === "bidding")
+                    $('#reporttype').val('userItemsBid');
+                else if(val === "shopping")
+                    $('#reporttype').val('userItemsBought');
+
+                $('#generate').removeClass('disabled');
+            }
+        });
+        
+        var self = this;
+        
+        $('#refreshcache').click(function(){
+            var config = {
+                url: SERVER_URL+'refreshcache/'+itemslist,
+                type: 'POST',
+                callback: self.postRefresh
+            }    
+            self.makeXHR(config);
+        });
+    },
+    postRefresh: function(response){
+        response = JSON.parse(response);
+        alert(response.message);
+    },
+    render: function(){
+        return(
+            <div className='mainContent'>
+                <h1 className='bigheading'>ADMIN</h1>
+                <div className='hidediv' style={{height: '43px'}}></div><br/>
+                <h1>Admin Console</h1><hr/>
+                <table width='100%'>
+                    <tr valign='top'>
+                        <td width='30%' valign='top'>
+                            <div>
+                                <h3>Refresh Cache content</h3>
+                                <small> (to be used only after adding any bidding/shopping item)</small><br/><br/>
+                                <label>select items list</label><br/>
+                                <select>
+                                    <option>shopping items list</option>
+                                    <option>bidding items list</option>
+                                </select><br/>
+                                <button className='btn btn-info disabled' id='refreshcache'>refresh cache</button>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <h3>Generate Reports</h3>
+                                <div>
+                                    <p className='infobar'>Reports generated using this option will be in <code>.xls</code> format. Such reports can be viewed in Microsoft Excel.</p>
+                                    <label>select item category</label><br/>
+                                                
+                                    <form method='POST' action='/generatefinalexcel'>
+                                        <select>
+                                            <option>shopping</option>
+                                            <option>bidding</option>
+                                        </select><br/>
+                                        <input type='hidden' id='reporttype' name='reporttype' val='userItemsBought' />
+                                        <button id='generate' type='submit' className='btn btn-success disabled'>generate</button>
+                                    </form>
+                                </div>
+                                
+                            </div>
+                        </td>
+                        <td width='20%'></td>
+                    </tr>
+                </table>
+                <br/>
+                <hr/>
+                <br/>
+            </div>
+        );
+    }
+});
+
+/*
+ * Shopping page main component
+ */
 var Shop = React.createClass({
+    useritems: null,
+    mixins:[AjaxMixin],
+    componentDidMount: function(){        
+        this.useritems = this.props.useritems;
+        
+        var intervalTime = 10000;
+        var self = this;
+        var config = {
+            url: SERVER_URL+'getshoppingitems',
+            callback: this.postRetrieveShopItems
+        }
+        
+        //repeatedly poll for the shopping items latest data.
+        setInterval(function(){            
+            self.makeXHR(config);      
+            
+        }, intervalTime);
+    },
+    postRetrieveShopItems: function(response){
+        response = JSON.parse(response);
+        if(response.statusCode === 200){
+            var self = this;
+            var tItems = response.data;
+            var nItems = [];
+            if(this.useritems && this.useritems.length > 0){
+                nItems = tItems.map(function(item){
+                    if(
+                        self.useritems &&
+                        self.useritems.length > 0 &&
+                        self.useritems.indexOf(item.itemId) > -1
+                    )
+                        item.isShopped = true;
+
+                    return item;
+                });
+            }
+            else nItems = tItems;
+
+            this.setState({
+                items: nItems
+            });
+        }
+        else alert("ERROR XHR:: "+response.message);
+    },
+    updateUserItems: function(item){
+        this.useritems.push(item);
+    },
+    getInitialState: function(){
+        return {
+            items: this.props.items
+        }
+    },
     render: function(){
         var navs = [{
             class:'',
-            href: 'http://localhost:3000/index',
+            href: SERVER_URL+'index',
             name: 'Home'
         },{
             class:'active',
-            href: 'http://localhost:3000/shop',
+            href: SERVER_URL+'shop',
             name: 'Shop'
         },{
             class:'',
-            href: 'http://localhost:3000/bid',
+            href: SERVER_URL+'bid',
             name: 'Bid'
         },{
             class:'',
-            href: 'http://localhost:3000/profile',
+            href: SERVER_URL+'profile',
             name: 'Profile'
         }];
+        
         return(
             <div className='shop'>
                 <h1 className='bigheading'>SHOP</h1>
@@ -478,7 +970,7 @@ var Shop = React.createClass({
                 <NavBarComponent items={navs} style={{marginTop:'20rem'}} />
                 <h1>CHOOSE ITEMS</h1>
                 <div style={ { height:'8px' } }></div>
-                <ItemsListComponent items={ this.props.items} />
+                <ItemsListComponent items={ this.state.items} shop={this.updateUserItems} />
             </div>
         );
     }
@@ -515,8 +1007,13 @@ var ItemsListComponent = React.createClass({
         
     },
     render: function(){
+        var self = this;
         var items = this.props.items.map(function(item){
-            return <ItemComponent itemid={item.itemId} image={item.itemImage} class={item.itemClass} name={item.itemName} desc={item.itemDesc} price={item.itemPrice} isShopped={item.isShopped} count={item.itemCountRemaining} />;
+            var btntext = "purchase";
+            if(item.isShopped)btntext = StandardText.purchased;
+            console.log(item);
+            
+            return <ItemComponent itemid={item.itemId} image={item.itemImage} class={item.itemClass} name={item.itemName} desc={item.itemDesc} price={item.itemPrice} isShopped={item.isShopped} count={item.itemCountRemaining} btnText={btntext} shop={self.props.shop} size={item.itemSize} />;
         });
         return(
             <div className='shopitemslist'>
@@ -532,7 +1029,10 @@ var ItemsListComponent = React.createClass({
  *Item component
  */
 var ItemComponent = React.createClass({
-   mixins:[AjaxMixin],
+   mixins:[AjaxMixin, CookiesMixin],
+   itemId: null,
+   ifItemHasSize: false,    
+   itemSize: null,
    DOMNode: null,    
    mouseEnter: function(evt){
         var DOM = this.getDOMNode();
@@ -596,7 +1096,7 @@ var ItemComponent = React.createClass({
                     'top': 500
                 }, 200);   
         }
-   },    
+   },
    componentDidMount: function(){
        var DOM = this.getDOMNode();       
        var that = this;
@@ -611,19 +1111,24 @@ var ItemComponent = React.createClass({
            $(DOM).css('opacity', 1);
        }
        
-       $(DOM).on('mouseenter', that.mouseEnter);
-       $(DOM).on('mouseleave', that.mouseLeave);
+       //$(DOM).on('mouseenter', that.mouseEnter);
+       //$(DOM).on('mouseleave', that.mouseLeave);
+       var btn = $(DOM).find('.btn.purchasebutton');
        
-       var btn = $(DOM).find('.btn');
-       
-       var btnText = StandardText.purchase;
-       if(this.props.count <= 0)btnText = StandardText.soldout;
-       else if(this.props.isShopped)btnText = StandardText.purchased;
-       
-       $(btn).text(btnText);
-       
+       //disable the <PURCHASE> button in case size is not selected
+       if(this.ifItemHasSize && !this.itemSize){
+            $(btn).addClass('disabled');    
+       }       
+      
        /** render modal for purchase */
-       $(btn).click(function(){           
+       $(btn).click(function(){   
+           
+           //check if the size has been selected in case the item has a size attribute
+           if(that.ifItemHasSize && !that.itemSize){
+                alert("ERROR:: You haven't selected a size for this product. Kindly do so to proceed.");
+                return;
+           } 
+           
            var title = $(DOM).find('.itemname').text();
            var price = $(DOM).find('.itemprice').text();
            var img = $(DOM).find('.top').css('background-image').split('(')[1];
@@ -634,10 +1139,27 @@ var ItemComponent = React.createClass({
            React.unmountComponentAtNode(document.getElementById('modal'));
            React.renderComponent(<ModalComponent title={StandardText.modalpurchasetitle} body={body} caller={that.purchaseProduct} btnText={'PURCHASE'} />, document.getElementById('modal'));
        });
+           
+       $(DOM).find('.size').click(function(){
+            
+           if(that.props.isShopped){
+               alert("ERROR:: You've already purchased this item. Try purchasing some other item.");
+               return;
+           }
+           
+            $(DOM).find('.size').css('background', '#00bcd4');
+            $(this).css('background', '#01579b');
+            that.itemSize = $(this).text();
+            $(btn).removeClass('disabled'); 
+       });       
+           
    },   
    processPostPurchase: function(response){
         response = JSON.parse(response);
         if(response.statusCode === 200){
+            //update the user items list
+            this.props.shop.call(null, this.itemId);
+            
             $(this.getDOMNode()).find('.btn').addClass('disabled');
             React.renderComponent(<AlertComponent class={"alert alert-success"} message={StandardText.itempurchasesuccess} />, document.getElementById('alertBox'));
 
@@ -648,40 +1170,69 @@ var ItemComponent = React.createClass({
    },
    purchaseProduct: function(){
         var itemid = $(this.getDOMNode()).data('itemid');
+        this.itemId = itemid;
+        
         var config = {
-            url: 'http://localhost:3000/purchase',
+            url: SERVER_URL+'purchase',
             type: 'POST',
             data:{
                 userId: 'I068574',
-                itemId: itemid
+                itemId: itemid,
+                itemSize: this.itemSize,
+                itemName: this.props.name
+            },
+            headers:{
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token-Header': this.getCookieDetails('X-CSRF-Token')['X-CSRF-Token']
             },
             callback: this.processPostPurchase
         };
         this.makeXHR(config);      
-   },        
+   },
    render: function(){
         var img = this.props.image;
-        var buybtnclass = (this.props.isShopped)?"btn btn-flat btn-primary withripple disabled":"btn btn-flat btn-primary withripple";
+        var buybtnclass = (this.props.isShopped)?"btn btn-flat btn-primary withripple disabled purchasebutton":"btn btn-flat btn-primary withripple purchasebutton";
+       
+        var sizesDiv = "";
+        var sizes = "";
         
+        if(this.props.size){
+            this.ifItemHasSize = true;
+            sizes = this.props.size.map(function(size){
+                var styleObj = {
+                    width: '30px !important',
+                    height: '30px !important',
+                    padding: '0 !important',
+                    borderRadius: '50% !important',
+                    float:'left',
+                    marginRight: '1rem',
+                    background: '#00bcd4',
+                    textAlign:'center',
+                    color:'#f1f1f1',
+                    fontSize:'1.3rem',
+                    lineHeight:'2.8rem',
+                    cursor: 'pointer'
+                }
+                return <div className='size' style={styleObj}>{size}</div>;
+            });
+            sizesDiv = <p className='sizes'>
+                            <p style={{color: '#009688'}}>select a size <small>(to enable PURCHASE)</small></p>
+                            {sizes}
+                       </p>;
+        }
         
         return(
             <div className={this.props.class} data-itemid={this.props.itemid}>
                 <div className='blur'></div>
                 <div className='itemdesc'>
+                    <p style={{color: '#009688'}}>about this product</p>
                     <p>{this.props.desc}</p>
-                    <p>
-                        <label>product popularity</label>
-                        <div className="progress">
-                            <div className="progress-bar progress-bar-success" style={ {"width": "40%"} }></div>
-                        </div>
-                    </p>
-                    <p>
-                       #purchases 10
-                    </p>
+                    {sizesDiv}
                 </div>    
                 <div className='top' style={ { background: 'url('+img+')' } }></div>
                 <div className='bottom'>
                     <table width='100%'>
+                        <tbody>
                         <tr valign='top'>
                             <td>
                                 <p className='itemname'>{this.props.name}</p>
@@ -689,11 +1240,12 @@ var ItemComponent = React.createClass({
                             </td>
                             <td style={ { textAlign:'right' } }>
                                 <a href="javascript:void(0)" className={buybtnclass}>
-                                    purchase
+                                    {this.props.btnText}
                                     <div className="ripple-wrapper"></div>
                                 </a>
                             </td>
                         </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -723,6 +1275,7 @@ var ModalComponent = React.createClass({
         $(DOM).find('.modal-title').html(title);
         $(DOM).find('.modal-body').html(body);
           
+            
         this.setState({ className: 'modal fade show in' });
       }.bind(this), 0);
     },
@@ -765,7 +1318,7 @@ var ModalComponent = React.createClass({
 });
 
 /**
- * Alert component
+ * Alert box component
  */
 var AlertComponent = React.createClass({
     componentDidMount: function(){
@@ -791,25 +1344,28 @@ var AlertComponent = React.createClass({
         );
     }
 });
-           
+ 
+/*
+ * Profile page component
+ */
 var ProfileComponent = React.createClass({
     render: function(){
         
         var navs = [{
             class:'',
-            href: 'http://localhost:3000/index',
+            href: SERVER_URL+'index',
             name: 'Home'
         },{
             class:'',
-            href: 'http://localhost:3000/shop',
+            href: SERVER_URL+'shop',
             name: 'Shop'
         },{
             class:'',
-            href: 'http://localhost:3000/bid',
+            href: SERVER_URL+'bid',
             name: 'Bid'
         },{
             class:'active',
-            href: 'http://localhost:3000/profile',
+            href: SERVER_URL+'profile',
             name: 'Profile'
         }];
         
@@ -820,8 +1376,8 @@ var ProfileComponent = React.createClass({
                 <br/>
                 <NavBarComponent items={ navs } />
                 <AvatarComponent /><br/><br/>
-                <ListComponent title={"your shopping list"} url={'http://localhost:3000/getitemdetails'} itemids={this.props.shopitemids} btntext={'UN-PURCHASE'} /><br/><br/>
-                <ListComponent title={"your bidding list"} url={'http://localhost:3000/getitemdetails'} itemids={[]} />
+                <ListComponent title={"your shopping list"} url={SERVER_URL+'getitemdetails'} itemids={this.props.shopitemids} btntext={ButtonText.undoPurchase} /><br/><br/>
+                <ListComponent title={"your bidding list"} url={SERVER_URL+'getitemdetails'} itemids={[]} />
             </div>
         );
     }
@@ -829,6 +1385,15 @@ var ProfileComponent = React.createClass({
            
 /** Avatar component */
 var AvatarComponent = React.createClass({
+    mixins:[CookiesMixin],
+    componentDidMount: function(){
+        var userId = this.getCookieDetails('X-request-user');
+        var username = this.getCookieDetails('X-request-username');
+        
+        var DOM = this.getDOMNode();
+        $(DOM).find('.profilename').text(username['X-request-username']);
+        $(DOM).find('.profileid').text(userId['X-request-user']);
+    },
     render: function(){
         return(
             <div className='avatar'>
@@ -836,12 +1401,12 @@ var AvatarComponent = React.createClass({
                     <tr valign='top'>
                         <td width='40%' style={ { textAlign: 'center' } }>
                             <div className='profileimg'>
-                                <img src='./files/images/img2.jpg' width='100%' />
+                                <img src='./files/images/blank-avatar.jpg' width='100%' />
                             </div>
                         </td>
                         <td style={ { textAlign: 'left' } }>
-                            <p className='profilename'>lionel Andrés messi</p>
-                            <p className='profileid'>I068574</p>
+                            <p className='profilename'></p>
+                            <p className='profileid'></p>
                             <hr/>
                         </td>
                     </tr>
@@ -850,7 +1415,10 @@ var AvatarComponent = React.createClass({
         );
     }
 });
-               
+  
+/*
+ * Item list component
+ */
 var ListComponent = React.createClass({
     mixins:[AjaxMixin],
     getInitialState: function(){
@@ -903,12 +1471,19 @@ var ListComponent = React.createClass({
         );
     }
 });
-           
+   
+/*
+ * Item component
+ */
 var ListItemComponent = React.createClass({
-    mixins:[AjaxMixin],
+    mixins:[AjaxMixin, CookiesMixin],
     itemType: null,
+    itemName: "",
     DOM: null,
     render: function(){
+        //set the itemname for unpurchase scenario
+        this.itemName = this.props.item.itemName;
+        
         return(
             <div className='item'>
                 <table width='100%'>
@@ -970,11 +1545,16 @@ var ListItemComponent = React.createClass({
             item = $(item).text();
              
             var config = {
-                url: 'http://localhost:3000/unpurchase',
+                url: SERVER_URL+'unpurchase',
                 type: 'POST',
                 data:{
                     userId: 'I068574',
-                    itemId: item
+                    itemId: item,
+                    itemName: this.itemName
+                },
+                headers:{
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token-Header': this.getCookieDetails('X-CSRF-Token')['X-CSRF-Token']
                 },
                 callback: this.postUndoProcess
             }
@@ -984,19 +1564,11 @@ var ListItemComponent = React.createClass({
     componentDidMount: function(){
         this.DOM = this.getDOMNode();
     }
-});
-                
-var BannerComponent = React.createClass({
-    render: function(){
-        return(
-            <div className='avatar'>
-                <h1>{this.props.bannerText}</h1>
-            </div>
-        );
-    }
-});
-           
-/** Custom <video> player */
+}); 
+ 
+/*
+ * Custom <video> player component
+ */
 var VideoPlayer = React.createClass({
     vidElem: null,
     vidDuration: 1,
@@ -1166,5 +1738,90 @@ var VideoPlayer = React.createClass({
             </div>    
         )
     }
-
+});
+                
+var ContactComponent = React.createClass({
+    render: function(){
+        
+        var groups = this.props.users.map(function(item){
+            console.log(item);
+            return <UserAvatarList members={item.members} heading={item.type} />;
+        });
+        return(
+            <div className='contact'>
+                <h1 className='bigheading'>TEAM</h1>
+                <div className='hidediv' style={{height: '43px'}}></div><br/><br/>
+                <div className='belowhidediv'>
+                    <p>We would like to hear from you.</p>    
+                </div>
+                <br/><br/><br/><br/>
+                <div className='users'>
+                    {groups}
+                </div>
+                <img src='./files/images/back.png' width='50px' onClick={this.goToHome} style={{cursor:'pointer'}} />
+                <br/>
+            </div>
+        );
+    },
+    goToHome: function(){
+        window.location.href = SERVER_URL+'login';
+    }
+});
+                
+var UserAvatarList = React.createClass({
+    componentDidMount: function(){
+        var DOM = this.getDOMNode();
+        var imgs = $(DOM).find('.useravatar img').length;
+        $(DOM).find('.useravatar img').on('load', function(){
+        
+            --imgs;
+            if(!imgs){
+                //all images have loaded
+                $(DOM).find('.membercategory').animate({
+                    marginTop:0,
+                    opacity:1
+                }, 300, function(){
+                    var userimgs = $(DOM).find('.useravatar');
+                    var count = 0;
+                    var interval = setInterval(function(){
+                        
+                        $(userimgs[count++]).addClass('memberanimate').css('-webkit-transform', 'scale(1)');
+                        if(count === userimgs.length){
+                            clearInterval(interval);
+                            return;
+                        }                        
+                    },100);
+                });
+            }
+        
+        })
+    },
+    render: function(){
+        var users = this.props.members.map(function(item){
+            return <UserAvatar user={item} />;
+        });
+        return(
+            <div className='avatargroup'>
+                <div className='membercategory'>{this.props.heading}</div><br/>
+                <div className='avatars'>
+                    {users}
+                </div>
+            </div>    
+        );
+    }
+})
+                
+var UserAvatar = React.createClass({
+    render: function(){
+        return(
+            <div className='useravatar'>
+                <img src={this.props.user.userAttachments.profilePic} width='30%' />
+                <div className='avatardetails'>
+                    <p className='name'>{this.props.user.userFname} {this.props.user.userLname}</p>
+                    <p className='team'>{this.props.user.team}</p>
+                    <p className='id'>{this.props.user.id}</p>
+                </div>    
+            </div>
+        );
+    }
 });

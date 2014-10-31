@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <!-- MEMO: update me with `git checkout gh-pages && git merge master && git push origin gh-pages` -->
+    <head>
+        <meta charset="utf-8">
+        <title>SAP Biddo</title>
+        
+        <link href='//fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
+        <link href='//fonts.googleapis.com/css?family=Montserrat:700' rel='stylesheet' type='text/css'>  
+        
+        <link rel="shortcut icon" href="https://cdn2.iconfinder.com/data/icons/money-finance/512/auction-hammer-512.png">
+        <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+        <link href="./files/dist/css/ripples.min.css" rel="stylesheet">
+        <link href="./files/dist/css/material-wfont.min.css" rel="stylesheet">
+        <link href="//fezvrasta.github.io/snackbarjs/dist/snackbar.min.css" rel="stylesheet">
+        <link href="./files/css/components.css" rel="stylesheet">
+        <style>
+            .infobar{
+                padding: 0.9rem;
+                background: #b3e5fc;
+                border: 1px solid #81d4fa;
+                border-left-width: 6px;
+            }
+            
+            td{
+                vertical-align: top;
+            }
+        </style>
+    </head>
+    <body  style='overflow-x:hidden'>
+        <div id='topbar'></div>
+        <div id="carousel"></div>
+        
+        <div id="maincontent"></div>        
+        
+        <div id="footer"></div>
+        <script src="./files/js/jquery-1.10.2.min.js"></script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="./files/dist/js/ripples.min.js"></script>
+        <script src="./files/dist/js/material.min.js"></script>
+        <script src="//fezvrasta.github.io/snackbarjs/dist/snackbar.min.js"></script>
+        
+        <script src="../react/build/react.js"></script>
+        <script src="../react/build/JSXTransformer.js"></script>
+        
+        <script type="text/jsx" src="./files/js/components.js"></script>
+        
+        <script type="text/jsx">
+             /** @jsx React.DOM */
+            var topbar = document.getElementById('topbar');
+            var content = document.getElementById('maincontent');
+            var footer = document.getElementById('footer');
+            
+            React.renderComponent(<TopBarComponent />, topbar);
+            React.renderComponent(<AdminContentComponent />, content);
+            React.renderComponent(<FooterComponent />, footer);
+            
+        </script>
+    
+    </body>
+</html>

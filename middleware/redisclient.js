@@ -82,5 +82,21 @@ exports.Redis.prototype = {
     },
     deleteFromClient: function(redisClient, key){
         redisClient.del(key);
+    },
+    refreshContent: function(redisClient, list, dbHandle, model, callback){
+        var self = this;
+        dbHandle.retrieveFromDatabase(model, {}, {}, "", function(res){
+            if(res.statusCode === 200){
+                console.log(">> Filling items into Redis Cache...");
+
+                var items = res.message;
+                if(Array.isArray(items)){
+                    self.deleteFromClient(redisClient, list);
+                    self.insertIntoClient(redisClient, list, items, true, function(err, res2){
+                           callback(err, res2);
+                    });
+                }
+            }
+        });
     }
 }

@@ -4,6 +4,94 @@
 
 exports.Processor = function(){};
 exports.Processor.prototype = {
+    generateExcel: function(xlsx, items, useritemlist, path, callback){
+        
+        var finalJSON = {};
+        
+        var row = [];
+        var rowCount = 0;
+        
+        row.push('User-Id');
+        for(var i=0;i<items.length;i++)
+            row.push("Item:: "+items[i].name);
+        row.push('Total');
+        finalJSON[rowCount++] = row;
+    
+        for(var i=0;i<useritemlist.length;i++){
+            row = [useritemlist[i].name];
+            var useritems = useritemlist[i].items;
+            
+            for(var j=0;j<items.length;j++)row.push('00000000000');
+            var totalUserAmt = 0;
+            for(var j=0;j<items.length;j++){
+                if(useritems.indexOf(items[j].name) > -1){
+                    var l = items[j].price.toString().length;
+                    var tVal = "";
+                    for(var g=0;g<11-l;g++)tVal+=" ";
+                    row[j+1] = tVal+items[j].price.toString();
+                    
+                    totalUserAmt+=parseInt(items[j].price);
+                }
+            }
+            var l = totalUserAmt.toString().length;
+            if(l < 5){
+                var tVal = "";
+                for(var g=0;g<5-l;g++)tVal+=" ";
+                totalUserAmt = tVal+totalUserAmt;
+            }
+            row.push(totalUserAmt);
+            finalJSON[rowCount++] = row;
+        } 
+        
+        var data = [];
+        for(var i in finalJSON)data.push(finalJSON[i]);
+        
+        return finalJSON;
+    },
+    prepareAllItemsAndPriceObject: function(RedisHandle, redisClient, ShopItemsList, callback){
+        RedisHandle.queryFromClient(redisClient, ShopItemsList, true, function(err, list){
+            var outlist = [];
+            if(err){
+                console.log(">> error retrieving items from redis...");
+            }
+            else{
+                console.log(">> retrieving shopping items from redis list...");
+                outlist = list.map(function(item){
+                    var o = {};
+                    item = JSON.parse(item);
+                    o.name = item.itemId;
+                    o.price = item.itemPrice;
+                    return o;
+                });
+               
+            }
+            callback(outlist);
+        });
+    },
+    getAllUsersItemList: function(dbHandle, UsersModel, itemlist, callback){
+        var projection = "userId "+itemlist;
+        console.log(projection)
+        dbHandle.retrieveFromDatabase(
+            UsersModel, 
+            {}, 
+            projection, 
+            "", 
+            function(response){
+                var outlist = [];
+                if(response.statusCode === 200){
+                    var data = response.message;
+                    console.log(data);
+                    for(var i=0;i<data.length;i++){
+                        var o = {};
+                        o.name = data[i].userId;
+                        o.items = data[i][itemlist];
+                        outlist.push(o);
+                    }
+                }
+                callback(outlist);
+            }
+        );
+    },
     getItemDetailsForItemIds: function(dbHandle, Model, itemids, options, callback){
         dbHandle.retrieveFromDatabase(
             Model,
@@ -19,12 +107,14 @@ exports.Processor.prototype = {
         );
     },
     checkShopItemCount: function(dbHandle, Model, itemId, Callback){
-        dbHandle.retrieveFromDatabase(Model, {itemId: itemId }, "itemCountRemaining", "unique", function(response){
+        dbHandle.retrieveFromDatabase(Model, {itemId: itemId }, "itemCountRemaining itemName itemImage", "unique", function(response){
             if(response.statusCode === 200){
                 var count = parseInt(response.message.itemCountRemaining);
                 console.log("count remaining is "+count);
                 Callback({
                         statusCode: 200,
+                        itemname: response.message.itemName,
+                        itemimg: response.message.itemImage,
                         message: count
                 });
             }
@@ -84,24 +174,12 @@ exports.Processor.prototype = {
                 var doc = resp.message;
                 if(!doc){
                     console.log(">> item not present in users shop list");
-                    self.checkShopItemCount(dbHandle, ShopItemModel, itemid, function(resp2){
-                        var out = {}
-                        if(resp2.statusCode === 200 && parseInt(resp2.message) > 0){
-                            out.statusCode = 200;
-                            out.message = "Item available for purchase.";
-                            console.log(">> Item available for purchase.");
-                        }
-                        else if(parseInt(resp2.message) <= 0){
-                            out.statusCode = 400;
-                            out.message = "No stock available";
-                            console.log(">> No stock available")
-                        }
-                        else{
-                            out.statusCode = 500;
-                            out.message = "Something went wrong while checking available inventory";
-                        }
-                        callback(out);
-                    });
+                    var out = {}
+                    out.statusCode = 200;
+                    out.message = "Item available for purchase.";
+                    console.log(">> Item available for purchase.");
+         
+                    callback(out);
                 }
                 else{
                     callback({
@@ -118,17 +196,21 @@ exports.Processor.prototype = {
             }
         });
     },
-    reduceShopItemQuantity: function(dbHandle, Model, itemId, quantity, options, Callback){
+    updateShopItemQuantity: function(dbHandle, Model, itemId, quantity, options, Callback){
+        console.log(">> updating itemCountPurchased by "+quantity);
         dbHandle.updateInDatabase(
             Model, 
             { itemId: itemId }, 
-            { $inc: { itemCountRemaining: -1*quantity } }, 
+            { $inc: { 
+                itemCountPurchased: quantity 
+              } 
+            }, 
             options, 
             function(response){
                  if(response.statusCode === 200){
                     Callback({
                         statusCode: 200,
-                        message: "item quantity reduced"
+                        message: "item quantity updated"
                     });
                 }
                 else Callback({
@@ -138,7 +220,7 @@ exports.Processor.prototype = {
             }
         );
     },
-    addItemToUsersShoppingList: function(dbHandle, UserModel, ShopItemModel, userId, userData, itemId, Callback){
+    addItemToUsersShoppingList: function(dbHandle, UserModel, ShopItemModel, userId, userData, itemId, itemSize, Callback){
         
         //check if the user record exists in the database
         dbHandle.retrieveFromDatabase(
@@ -153,7 +235,11 @@ exports.Processor.prototype = {
                         UserModel,
                         { userId: userId },
                         { $push:{
-                            "userItemsBought": itemId    
+                            "userItemsBought": itemId,
+                            userItemsBoughtDetail: {
+                                itemId: itemId,
+                                itemSize: itemSize
+                            }
                           } 
                         },
                         {},
@@ -166,16 +252,11 @@ exports.Processor.prototype = {
                     );
                 }else{
                     //no user record exists => insert new document
-                    var newuser = new UsersModel({
-                        userId: user,
-                        userFname: "Abinash",
-                        userLname: "Mohapatra",
-                        userItemsBought: [itemId],
-                        userItemsBid: []
-                    });
+                    console.log(">> no purchase record exists.");
+                    console.log(userData);
                     dbHandle.insertIntoDatabase(
                         UserModel,
-                        newuser,
+                        userData,
                         function(response3){
                             if(response3.statusCode === 200){
                                 Callback({ statusCode: 200, message: "item added successfully"});
@@ -192,7 +273,7 @@ exports.Processor.prototype = {
         dbHandle.retrieveFromDatabase(
             UserModel, 
             { userId: userId}, 
-            "userItemsBought", 
+            "userItemsBought userItemsBoughtDetail", 
             "unique", 
             function(response){
                 if(response.statusCode === 200){
@@ -201,39 +282,32 @@ exports.Processor.prototype = {
                     console.log(doc);
                     var index = doc.userItemsBought.indexOf(itemId);
                     if(index > -1){
+                        //update the shopping list
                         doc.userItemsBought.splice(index, 1);
-                        console.log(doc.userItemsBought);
+                        
+                        //update the shopping list detail
+                        doc.userItemsBoughtDetail = doc.userItemsBoughtDetail.filter(function(item){
+                            return item.itemId !== itemId;
+                        });
+                        
+                        console.log(doc.userItemsBoughtDetail);
 
                         dbHandle.updateInDatabase(
                             UserModel,
                             { userId: userId }, 
-                            { $set: { "userItemsBought": doc.userItemsBought }}, 
+                            { $set: { 
+                                userItemsBought: doc.userItemsBought,
+                                userItemsBoughtDetail: doc.userItemsBoughtDetail
+                              }
+                            }, 
                             {},
                             function(resp){
                                 if(resp.statusCode === 200){
                                     console.log(">> removeItemFromUsersShoppingList: item removed from shopping list");
-                                    self.reduceShopItemQuantity(
-                                        dbHandle, 
-                                        ShopItemModel, 
-                                        itemId, 
-                                        -1, 
-                                        {}, 
-                                        function(resp2){
-                                            if(resp2.statusCode === 200){
-                                                console.log(">> removeItemFromUsersShoppingList: item count increased successfully.")
-                                                Callback({
-                                                    statusCode: 200,
-                                                    message: "item removed from shopping list"
-                                                });
-                                            }
-                                            else{
-                                                Callback({
-                                                    statusCode: resp.statusCode,
-                                                    message: resp.message
-                                                });
-                                            }
-                                        });
-                                    
+                                    Callback({
+                                        statusCode: 200,
+                                        message: 'Item purchase has been successfully undone'
+                                    });
                                 } 
                                 else Callback({
                                         statusCode: resp.statusCode,

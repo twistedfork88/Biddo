@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+    <!-- MEMO: update me with `git checkout gh-pages && git merge master && git push origin gh-pages` -->
+    <head>
+        <meta charset="utf-8">
+        <title>SAP Biddo</title>
+        
+        <link href='//fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
+        <link href='//fonts.googleapis.com/css?family=Montserrat:700' rel='stylesheet' type='text/css'>  
+        
+        <link rel="shortcut icon" href="https://cdn2.iconfinder.com/data/icons/money-finance/512/auction-hammer-512.png">
+        <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+        <link href="./files/dist/css/ripples.min.css" rel="stylesheet">
+        <link href="./files/dist/css/material-wfont.min.css" rel="stylesheet">
+        <link href="//fezvrasta.github.io/snackbarjs/dist/snackbar.min.css" rel="stylesheet">
+        <link href="./files/css/components.css" rel="stylesheet">
+    </head>
+    <body>
+        <div id="maincontent"></div>        
+        <div id="footer"></div>
+      
+        <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="./files/dist/js/ripples.min.js"></script>
+        <script src="./files/dist/js/material.min.js"></script>
+        <script src="//fezvrasta.github.io/snackbarjs/dist/snackbar.min.js"></script>
+        
+        <script src="../react/build/react.js"></script>
+        <script src="../react/build/JSXTransformer.js"></script>
+        <script src="./files/js/Constants.js"></script>
+        <script type="text/jsx" src="./files/js/components.js"></script>
+        
+        <script type="text/jsx">
+             /** @jsx React.DOM */
+            var content = document.getElementById('maincontent');
+            var footer = document.getElementById('footer');
+            
+            var users = [{
+                type: 'media and logistics',
+                members: [{
+                        id: "I067564",
+                        team:"Globalization Services",
+                        userFname: "Alex",
+                        userLname: "Mcguire",
+                        userAttachments: {
+                            profilePic: "./files/images/peers/6.jpg"
+                        }
+                    },
+                    {
+                        id: "I077172",
+                        team:"Globalization Services",
+                        userFname: "Roger",
+                        userLname: "William",
+                        userAttachments: {
+                            profilePic: "./files/images/peers/5.jpg"
+                        }
+                    },    
+                    {
+                        id: "I193837",
+                        team:"Globalization Services",
+                        userFname: "Caroline",
+                        userLname: "Abbott",
+                        userAttachments: {
+                            profilePic: "./files/images/peers/4.jpg"
+                        }
+                    },
+                    {
+                        id: "I224435",
+                        team:"Globalization Services",
+                        userFname: "Alan",
+                        userLname: "Fournier",
+                        userAttachments: {
+                            profilePic: "./files/images/peers/7.jpg"
+                        }
+                    }]
+            },{
+                type: 'engineering',
+                members:[{
+                    id: "I473645",
+                    team:"Globalization Services",
+                    userFname: "Marie-Grace",
+                    userLname: "Gardner",
+                    userAttachments: {
+                        profilePic: "./files/images/peers/2.jpg"
+                    }
+                },{
+                    id: "I167463",
+                    team:"Globalization Services",
+                    userFname: "Samantha",
+                    userLname: "Parkington",
+                    userAttachments: {
+                        profilePic: "./files/images/peers/1.jpg"
+                    }
+                }]
+            }];
+            
+            React.renderComponent(<ContactComponent users={users} />, content);
+            React.renderComponent(<FooterComponent />, footer);
+               
+        </script>
+    
+    </body>
+</html>

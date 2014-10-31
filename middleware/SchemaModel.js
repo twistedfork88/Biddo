@@ -3,6 +3,7 @@ exports.SchemaModel = function(){
     this.userShopItemModelName = "UserShopItemModel";
     this.userBidItemModelName = "UserBidItemModel";
     this.userModelName = "UserModel";
+    this.userDetailsModelName = "UserDetailsModel";
 };
 exports.SchemaModel.prototype = {
     getShopItemSchema: function(mongoose){
@@ -13,8 +14,11 @@ exports.SchemaModel.prototype = {
             itemDesc: String,
             itemImage: String,            
             itemPrice: Number,
+            itemSize: [String],
             itemActive: Boolean,
-            itemCountRemaining: Number
+            itemCountRemaining: Number,
+            itemCountPurchased: Number,
+            dummyField: String
         });
     },
     getBidItemSchema: function(mongoose){
@@ -34,7 +38,21 @@ exports.SchemaModel.prototype = {
             userFname: String,
             userLname: String,
             userItemsBought: [Number],
-            userItemsBid: [Number]
+            userItemsBid: [Number],
+            userItemsBoughtDetail: { type : Array , "default" : [] }
+        });
+    },
+    getUserDetailsSchema: function(mongoose){
+        return mongoose.Schema({
+            userid: { type: String, index: true, unique: true },
+            userfname: String,
+            userlname: String,
+            useremail: { type: String, index: true, unique: true },
+            userpassword: String,
+            usersalt: String,
+            usertoken: String,
+            useractivationtoken: String,
+            userisactive: Boolean
         });
     },
     getShopItemModel: function(mongoose){
@@ -48,5 +66,9 @@ exports.SchemaModel.prototype = {
     getUserModel: function(mongoose){
         var schema = this.getUserSchema(mongoose);
         return mongoose.model(this.userModelName, schema);
+    },
+    getUserDetailsModel: function(mongoose){
+        var schema = this.getUserDetailsSchema(mongoose);
+        return mongoose.model(this.userDetailsModelName, schema);
     }
 }

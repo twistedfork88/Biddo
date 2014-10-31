@@ -17,7 +17,7 @@
     </head>
     <body>
         <div id='topbar'></div>
-        
+        <div id="waitdiv"></div>
         <div id="maincontent"></div>        
         <div id="modal"></div>
         
@@ -39,21 +39,26 @@
         <script type="text/jsx">
              /** @jsx React.DOM */
             var topbar = document.getElementById('topbar');
+            var wait = document.getElementById('waitdiv');
             var content = document.getElementById('maincontent');
             var footer = document.getElementById('footer');
             
             var count = 0;
             
             $.ajax({
-                url:"http://localhost:3000/getshopitemsforuser/I068574"
+                url: SERVER_URL+"getshopitemsforuser/I068574"
             })
             .done(function(response){
+            
+                //remove the wait component
+                React.unmountComponentAtNode(wait);
+            
                 response = JSON.parse(response);
                 if(response.statusCode === 200){
                     var shopped = response.message.userItemsBought;
                     count++;
                     React.renderComponent(<ProfileComponent shopitemids={shopped} />, content);
-                    //React.renderComponent(<FooterComponent />, footer);
+                    React.renderComponent(<FooterComponent />, footer);
                 }
             });
             
@@ -72,7 +77,7 @@
                 }
             });*/
             //React.renderComponent(<TopBarComponent />, topbar);
-            
+            React.renderComponent(<WaitIconComponent message={"please wait... fetching your shopping and bidding list."} />, wait);
         </script>
     
     </body>

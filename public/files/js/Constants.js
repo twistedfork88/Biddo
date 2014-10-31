@@ -13,5 +13,7 @@ var StandardText = {
 
 var ButtonText = {
     purchase:'PURCHASE',
-    undoPurchase: 'UN-PURCHASE'
+    undoPurchase: 'UNDO-PURCHASE'
 }
+
+var SERVER_URL = "http://10.52.99.54:3000/";

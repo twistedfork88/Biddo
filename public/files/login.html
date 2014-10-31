@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+    <!-- MEMO: update me with `git checkout gh-pages && git merge master && git push origin gh-pages` -->
+    <head>
+        <meta charset="utf-8">
+        <title>SAP Biddo</title>
+        
+        <link href='//fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
+        <link href='//fonts.googleapis.com/css?family=Montserrat:700' rel='stylesheet' type='text/css'>  
+        
+        <link rel="shortcut icon" href="https://cdn2.iconfinder.com/data/icons/money-finance/512/auction-hammer-512.png">
+        <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+        <link href="./files/dist/css/ripples.min.css" rel="stylesheet">
+        <link href="./files/dist/css/material-wfont.min.css" rel="stylesheet">
+        <link href="//fezvrasta.github.io/snackbarjs/dist/snackbar.min.css" rel="stylesheet">
+        <link href="./files/css/components.css" rel="stylesheet">
+        <style>
+            html { 
+              background: url(./files/images/bg.jpg) no-repeat center center fixed; 
+              -webkit-background-size: cover;
+              -moz-background-size: cover;
+              -o-background-size: cover;
+              background-size: cover;
+            }
+            
+            #overlay{
+                position: absolute;
+                left: 0;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 0;
+            }
+            
+            body{
+                background: transparent;
+            }
+            
+            #modalBox{
+                margin: auto;
+                width: 70% !important;
+            }
+            
+            .modal-dialog{
+                width: 50%;
+            }
+            
+            .modal-body span{
+                font-size: 2.7rem;
+                margin-top: -5rem !important;
+                line-height: 2.7rem;
+            }
+            
+            #modalBox input{
+                border: 0px !important;
+                border-bottom: 1px solid rgba(52,73,94,0.1) !important;
+                border-radius: 0  !important;
+                display: block  !important;
+                outline: none;
+                padding: 1.2rem  !important;
+                width: 100%  !important;
+                box-sizing: border-box;
+
+                margin-bottom: 0.5rem;
+            }
+
+            .loginInput{
+                position: relative;
+                width: 100%;
+                margin-top: 1.5rem;
+            }
+
+            .loginInput input{
+                background: transparent !important;
+                //border-bottom: 1px solid rgba(240,240,240,0.6);
+                font-family: "Montserrat", sans-serif;
+                font-size: 1.6rem;
+                color: #5677fc;
+            }
+
+            .loginInput .belowborder{
+                position: absolute;
+                bottom: 0px;
+                left: 0px;
+                width: 100%;
+                height: 0.07rem;
+                background: #4db6ac;
+
+                -webkit-transition: 0.2s ease-in;
+                -moz-transition: 0.2s ease-in;
+
+                -webkit-transform:scale(0);
+                -moz-transform:scale(0);
+            }
+
+            .belowborder.belowborderanimate{
+                //-webkit-animation: bborderanim 0.6s ease-in;
+                //-moz-animation: bborderanim 0.6s ease-in;
+                 -webkit-transform:scale(1);
+                 -moz-transform:scale(1);
+            }
+
+            .loginInput .fakePlaceholder{
+                text-transform: lowercase;
+                position: absolute;
+                top: 14px;
+                left: 10px;
+                z-index: 5;
+                color: #009688;
+                pointer-events: none;
+                display: inline-block !important;
+                font-family: "Open Sans", sans-serif;
+                font-size: 1.6rem;
+                -webkit-transition: all 0.14s ease-out;
+                -moz-transition: all 0.14s ease-out;
+            }
+
+            .loginInput .fakePlaceholder.fakeAnimate{
+                top: -5px;
+                left: 6px;
+                font-size: 1.1rem;
+                color: #16A085;
+            }
+
+            /* HIGHLIGHTER ================================== */
+            #modalBox .loginInput > .highlight {
+              position:absolute;
+              height:60%; 
+              width:100px; 
+              top:120%; 
+              left:60px;
+              pointer-events:none;
+              opacity:0.5;
+            }
+
+            /* active state */
+            .loginInput input:focus ~ .highlight {
+              -webkit-animation:inputHighlighter 0.3s ease;
+              -moz-animation:inputHighlighter 0.3s ease;
+              animation:inputHighlighter 0.3s ease;
+            }
+
+            /* ANIMATIONS ================ */
+            @-webkit-keyframes inputHighlighter {
+                from { background:#5677fc; }
+              to 	{ left:0;width:0; background:transparent; }
+            }
+            @-moz-keyframes inputHighlighter {
+                from { background:#5677fc; }
+              to 	{ left:0; width:0; background:transparent; }
+            }
+            @keyframes inputHighlighter {
+                from { background:#5677fc; }
+              to 	{ left:0;width:0; background:transparent; }
+            }
+            
+            .infobar{
+                padding: 0.9rem;
+                background: #b3e5fc;
+                border: 1px solid #81d4fa;
+                border-left-width: 6px;
+                display: none;
+            }
+            
+            .infobar.success{
+                background: #a3e9a4;
+                border-color: #72d572;
+            }
+            
+            .infobar.error{
+                background: #f9bdbb;
+                border-color: #f69988;
+            }
+            
+            .bottomtext{
+                margin: 0.5rem auto;
+                width: 90%;
+                text-align: center;
+                margin-top: -9rem;
+                background: rgba(0,0,0,0.3);
+                color: #f1f1f1;
+                padding: 1rem;
+                border-top: 4px solid #16A085;
+            }
+            
+            .waitdiv{
+                opacity: 0;
+            }
+            
+            #modalBox .desc{
+                font-size:1.6rem;
+                line-height: 1.5rem;
+            }
+            
+        </style>
+    </head>
+    <body>
+        <div id="maincontentforlogin"></div>  
+        <p class="bottomtext">
+            &copy;copyright BIDDO, SAP Labs &nbsp;
+            <span><a href="/contact">contact</a></span>
+        </p>
+        <div id='modal'></div>
+        <div id='modalBox'>
+                <div class='modal fade' id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h4 class="modal-title" id="myModalLabel">New User sign up</h4>
+                      </div>
+                      <div class="modal-body">
+                        <table>
+                            <tr valign='top'>
+                                <td width='40%'>
+                                    <p style='padding-right:2rem'>
+                                        <table>
+                                            <tr>
+                                                <td width='30%'>
+                                                    <img src="http://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png" width='100%' />
+                                                </td>
+                                                <td>&nbsp;&nbsp;<span>Welcome User!</span></td>
+                                            </tr>
+                                        </table><br>
+                                        <p class='desc' style="width:90%;">
+                                            Use your <b>I/C number</b> as the <code>username</code> and your official SAP <code>email</code> to sign up.
+                                        </p>
+                                        <p class="infobar success" id="info" style="width:90%;">An email has been sent to the email id provided. Kindly activate the registration by accessing the link in the email.</p> 
+                                        <p class="infobar error" id="err">Oops ! something went wrong. Please try again.</p> 
+                                    </p>
+                                </td>
+                                <td>
+                                    <form method='POST' id='signupForm'>
+                                        <table width='100%'>
+                                            <tr valign='top'>
+                                                <td>
+                                                    <div style="display:block" class="infobar">
+                                                        all fields are mandatory
+                                                    </div>
+                                                    <p class='loginInput'>
+                                                    <p class='loginInput'>
+                                                        <input type='text' id='userid' required />
+                                                        <label class='fakePlaceholder'>Username (e.g. I999888)</label>
+                                                        <span class='belowborder' style="bottom:0px"></span>
+                                                        <span class='highlight'></span>
+                                                    </p>
+                                                     <p class='loginInput'>
+                                                        <input type='email' id='email' required />
+                                                        <label class='fakePlaceholder'>Email (e.g. johndoe@sap.com)</label>
+                                                        <span class='belowborder' style="bottom:0px"></span>
+                                                        <span class='highlight'></span>
+                                                    </p>
+                                                    <p class='loginInput'>
+                                                        <input type='password' id='signPass' pattern=".{8,}" required />
+                                                        <label class='fakePlaceholder'>Password (min. 8 char)</label>
+                                                        <span class='belowborder' style="bottom:0px"></span>
+                                                        <span class='highlight'></span>
+                                                    </p>
+                                                    <p class="resMsg" style="opacity:0">some text</p>
+                                                </td>
+                                            </tr>
+                                        </table>    
+                                        <table width='100%'>
+                                            <tr valign='top'>
+                                                <td width='13%'>
+                                                    <button type="button" class="btn btn-success" id='signup'>sign up</button>
+                                                </td>
+                                                <td style="text-align:left !important">
+                                                    <div style="width:70px !important;margin-top:1rem" class="waitdiv">
+                                                        <div style="width:'70px'; float:'left'">
+                                                            <div class='bounceContainer'>
+                                                                <div class='double-bounce1'></div>
+                                                                <div class='double-bounce2'></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                    </form>
+                                </td>                                
+                            </tr>
+                        </table>
+                      </div>
+                      <div class="modal-footer" title='close'>
+                        <a href='' data-dismiss="modal">
+                            x
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+        </div>
+        <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="./files/dist/js/ripples.min.js"></script>
+        <script src="./files/dist/js/material.min.js"></script>
+        <script src="//fezvrasta.github.io/snackbarjs/dist/snackbar.min.js"></script>
+        
+        <script src="../react/build/react.js"></script>
+        <script src="../react/build/JSXTransformer.js"></script>
+        <script src="./files/js/Constants.js"></script>
+        <script type="text/jsx" src="./files/js/components.js"></script>
+        
+        <script type="text/jsx">
+             /** @jsx React.DOM */
+            var content = document.getElementById('maincontentforlogin');
+            React.renderComponent(<LoginPageComponent />, content);
+        </script>
+        <script>
+            $(document).ready(function(){
+                
+                //paper element animation
+                $('#modalBox input')
+                    .bind('focus', function(evt){
+                        console.log("in focus...");
+                        $(evt.target).parent().find('.belowborder').addClass('belowborderanimate');
+                        $(evt.target).parent().find('.fakePlaceholder').addClass('fakeAnimate');
+                    })
+                    .bind('blur', function(e) { 
+                        console.log("blurred away ");
+                        console.log($(e.target)[0])
+                        if (!e.target.checkValidity()) { 
+                            console.log('doing custom error handling'); 
+                        }
+                        else $(e.target).removeClass('inval');
+
+                        $(e.target).parent().find('.belowborder').removeClass('belowborderanimate');
+                        if($(e.target).val()==="")
+                        $(e.target).parent().find('.fakePlaceholder').removeClass('fakeAnimate');
+                    });
+                
+                //signup new user
+                $('#signup').click(function(){
+                    
+                    $('#modalBox .infobar').hide();
+                    $('#signupForm .infobar').show();
+                    
+                    var that = this;
+                    var validity = $('form')[0].checkValidity();
+                    if(validity){
+                        
+                        $(this).addClass('disabled');
+                        $('.waitdiv').css('opacity', 1);
+                        
+                        var url = "http://10.52.99.54:3000/createuser?user="+$('#userid').val()+"&pass="+$('#signPass').val()+"&email="+$('#email').val();
+                        $.ajax({
+                            url: url,
+                            type: 'POST'
+                        })
+                        .done(function(response){
+                            $('.waitdiv').css('opacity', 0);
+                            
+                            response = JSON.parse(response);
+                            if(response.statusCode === 200){
+                                //user created and mail sent
+                                $('#info').fadeIn();
+                            }
+                            else{
+                                $('#err').text(response.message).fadeIn();
+                                 $(that).removeClass('disabled');   
+                            }
+                        });
+                    }
+                    else $('#modalBox .resMsg')
+                        .text("Invalid regristration details. Kindly provide valid data.")
+                        .css('opacity', 1);
+                });
+            });
+        
+        </script>
+    </body>
+</html>

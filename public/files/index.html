@@ -16,9 +16,8 @@
         <link href="./files/css/components.css" rel="stylesheet">
     </head>
     <body>
-        <div id='topbar'></div>
-        <div id="carousel"></div>
-        
+        <div id="topfixeddiv"></div>
+        <div id="carousel"></div>        
         <div id="maincontent"></div>        
         
         <div id="footer"></div>
@@ -36,16 +35,16 @@
         
         <script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDY0kkJiTPVd2U7aTOAwhc9ySH6oHxOIYM&sensor=false"></script>
         <script src="./files/js/collageplus.js"></script>
+        <script src="./files/js/Constants.js"></script>
         <script type="text/jsx" src="./files/js/components.js"></script>
         
         <script type="text/jsx">
              /** @jsx React.DOM */
-            var topbar = document.getElementById('topbar');
             var carousel = document.getElementById('carousel');
             var content = document.getElementById('maincontent');
             var footer = document.getElementById('footer');
             
-            //React.renderComponent(<TopBarComponent />, topbar);
+            React.renderComponent(<TopFixedComponent />, document.getElementById('topfixeddiv'));
             React.renderComponent(<CarouselComponent />, carousel);
             React.renderComponent(<MainContentComponent />, content);
             React.renderComponent(<FooterComponent />, footer);

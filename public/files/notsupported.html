@@ -10,8 +10,9 @@
     </head>
     <style>
         body{
-            background: #f1f1f1;
+            background: #f7f7f7;
             font-family: "Montserrat", sans-serif;
+            overflow-x: hidden;
         }
         
         .container{
@@ -30,7 +31,8 @@
         }
         
         h1 span{
-            color: #C0392B;
+            color: #01579b;
+            font-weight: bolder;
         }
         
         h2{
@@ -38,13 +40,104 @@
             line-height: 2.9rem;
             color: #f4511e;
         }
+        
+        .name{
+            font-family: "Montserrat", sans-serif;
+            color: #ff5722;
+        }
+        
+        td div{
+            padding: 1rem;
+            background: #34495e;
+            
+            text-transform: uppercase;
+            position: relative;
+            border-bottom: 7px solid #0277bd;
+        }
+        
+        a{
+            color: #ff5722;
+            text-decoration: none;
+        }
+        
+        td div:hover .name{
+            color: #16A085;
+        }
+        
+        h1.bigheading{
+            font-family: Segoe UI, sans-serif;
+            font-weight: bolder;
+            font-size: 19rem;
+            color: rgba(0,0,0,0.2);
+            height: 170px;
+            overflow: hidden;
+            background: transparent;
+            padding: 0;
+            padding-top: 4rem;
+            border: 0;
+            margin: 0;
+        }
+
+        .hidediv{
+            height: 50px;
+            width: 100%;
+            background: #f7f7f7;
+            position: absolute;
+            margin-top: -50px !important;
+            box-sizing: border-box;
+        }
+        
     </style>
     <body>
         <div class="container">
-            <h1>
-                We're sorry, but SAP Biddo doesn't work with <span>Internet Explorer 9</span> and its predecessors. Yeah too bad. But it's not the end of the world !
+            <h1 class='bigheading'>ERROR</h1>
+            <p class="hidediv"></p><br>
+            <h1 style="margin-top:-10px">
+                We're sorry, but <span>SAP BIDDO</span> doesn't work with the browser you are currently using. Yeah too bad. But it's not the end of the world !
             </h1>
-            <h2>kindly either upgrade to Internet Explorer 10 or use Chrome/Firefox.</h2>
+            <h2>kindly switch to any of the following browsers:</h2>
+            <div class="browsers">
+                <table style="margin:auto;width:70%">
+                    <tr>
+                        <td style="text-align:center" width='33%'>
+                            <div>
+                                <img src="./files/images/ie.png" width="40%" />
+                                <a href="http://www.microsoft.com/en-us/download/internet-explorer-10-details.aspx" target="_blank">
+                                    <p class="name">Internet Explorer 10+</p>
+                                </a>
+                            </div>
+                        </td>
+                        <td style="text-align:center" width='33%'>
+                            <div>
+                                <img src="./files/images/chrome.png" width="40%" />
+                                <a href="http://www.google.com/chrome/" target="_blank">
+                                    <p class="name">Google Chrome</p>
+                                </a>
+                            </div>
+                        </td>
+                        <td style="text-align:center" width='33%'>
+                            <div>
+                                <img src="./files/images/firefox.png" width="40%" />
+                                <a href="https://www.mozilla.org/en-US/firefox/new/" target="_blank">
+                                    <p class="name">Mozilla Firefox</p>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
         </div>
+        <script src="./files/js/jquery-1.10.2.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                $('td div')
+                    .mouseenter(function(){
+                        $(this).animate({'margin-top': '-10px'}, 300);
+                    })
+                    .mouseleave(function(){
+                        $(this).animate({'margin-top': '0px'}, 300);
+                    });
+            });
+        </script>
     </body>
 </html>
