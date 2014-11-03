@@ -4,6 +4,64 @@
 
 exports.Processor = function(){};
 exports.Processor.prototype = {
+    generateSSLOptions: function(fs, dirname){
+
+        return {
+
+          key: fs.readFileSync(dirname+"/certificates/privatekey.pem", 'ascii').toString(),
+          cert: fs.readFileSync(dirname+"/certificates/certificate.pem", 'ascii').toString(),
+
+          /* By requesting the client provide a certificate, we are essentially authenticating the user */
+          requestCert: true,
+
+          /* If specified as "true", no unauthenticated traffic will make it to the route specified */
+          rejectUnauthorized: false
+        }
+    },
+    checkCertificateAuthority: function(certificate){
+        var issuer =  certificate.issuer;
+        if(issuer){
+            return issuer.O === "SAP-AG" && issuer.CN === "SSO_CA";
+        }
+        return false;
+    },
+    processClientCertificate: function(certificate){
+        var out = {
+            userid: null,
+            username: null,
+            usermail: null
+        };
+
+        if(certificate.subject){
+            //retrieve the userid
+            out.userid = certificate.subject.CN;
+        }
+        if(certificate.subjectaltname){
+            var alt = certificate.subjectaltname;
+            if(alt){
+                var parts = alt.split(':');
+                if(parts.length > 1){
+                    //retrieve the email
+                    out.usermail = parts[1];
+                    
+                    //generate the name
+                    var parts2 = parts[1].split('@');
+                    if(parts2.length){
+                        var tname = parts2[0];
+                        var nameparts = tname.split('.');
+                        out.username = nameparts[0]+" "+nameparts[1]
+                    }
+                }
+            }    
+        }
+        return out;
+    },
+    setResponseHeaders: function(response, headers){
+        for(var header in headers){
+            response.setHeader(header, headers[header]);
+        }
+        return response;
+    },
     generateExcel: function(xlsx, items, useritemlist, path, callback){
         
         var finalJSON = {};

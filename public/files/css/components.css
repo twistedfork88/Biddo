@@ -152,7 +152,7 @@ select option{
 
 .login .topdiv{
     padding: 1.5rem;
-    background: rgb(66, 133, 244);
+    background: #0f9d58;//rgb(66, 133, 244);
     overflow: hidden;
 }
 
@@ -238,7 +238,7 @@ select option{
 .loginInput .fakePlaceholder.fakeAnimate{
     top: -5px;
     left: 6px;
-    font-size: 1.1rem;
+    font-size: 1.4rem;
     color: #16A085;
 }
 

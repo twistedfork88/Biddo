@@ -7,6 +7,8 @@
 var express = require('express')
   , routes = require('./routes')
   , http = require('http')
+  , https = require('https')
+  , clientCertificateAuth = require('client-certificate-auth')
   , path = require('path')
   , mongoose = require('mongoose')
   , redis = require('redis')
@@ -18,6 +20,7 @@ var express = require('express')
   , RedisStore = require('connect-redis')(session)
   , querystring = require('querystring')
   , excelbuilder = require('msexcel-builder')
+  , winston = require('winston')
   , databaseModule = require('./middleware/database.js')
   , redisClientModule = require('./middleware/redisclient.js')
   , SchemaModelModule = require('./middleware/SchemaModel.js')
@@ -43,7 +46,15 @@ var UsersModel = null
 var ShopItemsList = "shopItemsList"
   , BidItemsList = "bidItemsList";
 
+//bcrypt hashing work factor
 var WORK_FACTOR = 12;
+
+//instantiate winston logger
+var logger = new (winston.Logger)({
+    transports: [
+      new (winston.transports.File)({ filename: 'applog.log' })
+    ]
+});
 
 var app = express();
 app.configure(function(){
@@ -63,14 +74,27 @@ app.configure(function(){
     secret: "consideringthedeviceisattachedtomyapartmentsWiFinetwork"
   }));     
   //app.use(express.csrf());
+
+  /*read client certificate
+  app.use(clientCertificateAuth(function(cert){
       
+    console.log(cert.subject);       
+          
+  }));*/
+    
   app.use(function(req, res, next){
+      
+      //remove the X-Powered-By header
+      res.removeHeader('X-Powered-By');      
       
       var userAgent = req.headers['user-agent'];  
       console.log(userAgent);
       
       if(req.url.indexOf("/activateuser") > -1){
-        if(userAgent.indexOf("Chrome") < 0 && userAgent.indexOf("Firefox") < 0){
+        if(
+                userAgent.indexOf("Chrome") < 0 && 
+                userAgent.indexOf("Firefox") < 0
+        ){
             //redirect to not-supported page
             res.redirect('/unsupported');
             return;
@@ -82,20 +106,63 @@ app.configure(function(){
       
       if(match && match.length){
             console.log(">> received request for "+req.url);
-          
-            //set no-cache header
-            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        
+            //set required response headers
+            var responseHeaders = {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'X-CSS-Protection': 1,
+                'X-Content-Type-Options': 'nosniff'
+            }
+            res = ProcessorHandle.setResponseHeaders(res, responseHeaders);
        
             //bad way => check browser based on user-agent header
-            if(userAgent.indexOf("Chrome") < 0 && userAgent.indexOf("Firefox") < 0){
+            if(
+                userAgent.indexOf("Chrome") < 0 && 
+                userAgent.indexOf("Firefox") < 0
+            ){
                 //redirect to not-supported page
                 res.redirect('/unsupported');
                 return;
             }
+          
+            console.log(req.session);
             
             /** set user information in the request session */
-            if(!req.session || (req.session && (!req.session.user || !req.session.username || !req.session.token))){
+            if(
+                !req.session || 
+                (
+                    req.session && 
+                    (
+                        !req.session.user || 
+                        !req.session.username || 
+                        !req.session.usermail || 
+                        !req.session.token
+                    )
+                )
+            ){
                 console.log(">> session does not exist...");
+                
+                /*var cert = req.connection.getPeerCertificate();
+                var certAuth = ProcessorHandle.checkCertificateAuthority(cert);
+                if(certAuth){
+                      console.log(">> Certificate authority verified.");
+                      var certinfo = ProcessorHandle.processClientCertificate(cert);
+                      console.log(certinfo);
+                      req.session = {};
+                      req.session.user = certinfo.userid;
+                      req.session.username = certinfo.username;
+                      req.session.usermail = certinfo.usermail;
+                      req.session._csrf = uid(24);
+                      
+                      //set the necessary cookies
+                      res.cookie('X-request-user', req.session.user);
+                      res.cookie('X-request-username', req.session.username);
+                      res.cookie('X-CSRF-Token', req.session._csrf);
+                    
+                      if(req.url !== "/login") return next();
+                      else return res.redirect("/index");
+                }*/
+                
                 if(req.cookies && req.cookies.hieallmnrstta && req.cookies['X-request-user']){
                     console.log(">> cookies are set though...");
                     //query and verify if the tokens match
@@ -194,6 +261,7 @@ app.configure(function(){
   
   /** 404 route handling */
   app.use(function(req, res, next){
+    res.setHeader('Content-Type', 'text/html');
     fs.readFile(__dirname+"/public/files/error.html", function(err, data){
         res.end(data);
     });
@@ -205,44 +273,28 @@ app.configure('development', function(){
 });
 
 app.get('/login', function(req, res){
+    res.setHeader('Content-Type', 'text/html');
     fs.readFile(__dirname+"/public/files/login.html", function(err, data){
         res.end(data);
     });
 });
 
-app.get('/initialize', function(req, res){
-    //get the user details using LDAP
-    res.redirect('http://10.52.99.54/getwindowsuser.php');
-});
-
-app.get('/setsession', function(req, res){
-    console.log(">> setting session...")
-    
-    req.session = {};
-    req.session.user = req.query.user;
-    req.session.username = "Johnny Blaze";
-    
-    res.cookie('X-request-user', req.session.user);
-    res.cookie('X-request-username', req.session.username);
-    
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    
-    res.redirect('/index');
-});
-
 app.get('/adminlogin', function(req, res){
+    res.setHeader('Content-Type', 'text/html');
     fs.readFile(__dirname+'/public/files/admin.html', function(err, data){
         res.end(data);
     });
 });
 
 app.get('/index', function(req, res){
+    res.setHeader('Content-Type', 'text/html');
     fs.readFile(__dirname+'/public/files/index.html', function(err, data){
         res.end(data);
     });
 });
 
 app.get('/shop', function(req, res){
+    res.setHeader('Content-Type', 'text/html');
     console.log(">> in /shop");
     console.log(req.session);
     fs.readFile(__dirname+'/public/files/shop.html', function(err, data){
@@ -251,18 +303,21 @@ app.get('/shop', function(req, res){
 });
 
 app.get('/profile', function(req, res){
+    res.setHeader('Content-Type', 'text/html');
     fs.readFile(__dirname+'/public/files/profile.html', function(err, data){
         res.end(data);
     });
 });
 
 app.get('/contact', function(req, res){
+    res.setHeader('Content-Type', 'text/html');
     fs.readFile(__dirname+'/public/files/contact.html', function(err, data){
         res.end(data);
     });
 });
 
 app.get('/unsupported', function(req, res){
+    res.setHeader('Content-Type', 'text/html');
     fs.readFile(__dirname+'/public/files/notsupported.html', function(err, data){
         res.end(data);
     });
@@ -823,6 +878,17 @@ app.post('/refreshcache/:list', function(req, res){
                 }));
 });
 
+/** instantiate the general purpose operations class */
+ProcessorHandle = new ProcessorModule.Processor();
+
+
+/*var SSLOpt = ProcessorHandle.generateSSLOptions(fs, __dirname);
+var server = https.createServer(SSLOpt, app);
+
+server.listen(app.get('port'), function(){
+  console.log("Express server listening on port " + app.get('port'));
+});*/
+
 http.createServer(app).listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
 });
@@ -831,6 +897,7 @@ http.createServer(app).listen(app.get('port'), function(){
 var dbHandle = new databaseModule.database();
 dbHandle.connectToDatabase(mongoose, function(response){
     console.log(">> "+response.message);
+    logger.info(">> "+response.message)
     if(response.statusCode === 200){
         isConnectedToDb = true;
         
@@ -841,8 +908,6 @@ dbHandle.connectToDatabase(mongoose, function(response){
         BidItemModel = SchemaModelHandle.getBidItemModel(mongoose);
         UserDetailsModel = SchemaModelHandle.getUserDetailsModel(mongoose);
         
-        /** instantiate the general purpose operations class */
-        ProcessorHandle = new ProcessorModule.Processor();
         UserDetailsHandle = new UserDetailsModule.UserOps();
         
         /** set up the Redis connection */
@@ -850,12 +915,14 @@ dbHandle.connectToDatabase(mongoose, function(response){
         redisClient = RedisHandle.createClient(redis);
         RedisHandle.connectToClient(redisClient, function(){
             console.log(">> Connected to Redis successfully.");
+            logger.info(">> Connected to Redis successfully.");
         
             /** fill in all shop items into the cache */
             RedisHandle.refreshContent(redisClient, ShopItemsList, dbHandle, ShopItemModel, function(err, res){
                if(err)console.log(">> Error while inserting shopping items into cache...");
                 else{
                     console.log(">> shopping items inserted into Redis successfully.");
+                    logger.info(">> shopping items inserted into Redis successfully.");
                 }              
             });
         });

@@ -418,7 +418,7 @@ var LoginPageComponent = React.createClass({
                                         <table width='100%'>
                                             <tr valign='top'>
                                                 <td width='23%'>
-                                                    <button type='button' className='btn btn-primary' id='loginbtn'>login</button>
+                                                    <button type='button' className='btn btn-success' id='loginbtn'>login</button>
                                                 </td>
                                                 <td>
                                                     <div className='waitdiv' style={{marginTop:'-2rem',opacity:0}}><WaitIconComponent message={""} /></div>

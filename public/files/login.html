@@ -14,7 +14,7 @@
         <link href="./files/dist/css/material-wfont.min.css" rel="stylesheet">
         <link href="//fezvrasta.github.io/snackbarjs/dist/snackbar.min.css" rel="stylesheet">
         <link href="./files/css/components.css" rel="stylesheet">
-        <style>
+        <style type="text/css">
             html { 
               background: url(./files/images/bg.jpg) no-repeat center center fixed; 
               -webkit-background-size: cover;
@@ -124,7 +124,7 @@
             .loginInput .fakePlaceholder.fakeAnimate{
                 top: -5px;
                 left: 6px;
-                font-size: 1.1rem;
+                font-size: 1.4rem;
                 color: #16A085;
             }
 
@@ -367,7 +367,7 @@
                         $(this).addClass('disabled');
                         $('#modalBox .waitdiv').css('opacity', 1);
                         
-                        var url = "http://localhost:3000/createuser?user="+$('#userid').val()+"&pass="+$('#signPass').val()+"&email="+$('#email').val();
+                        var url = "http://10.52.99.54:3000/createuser?user="+$('#userid').val()+"&pass="+$('#signPass').val()+"&email="+$('#email').val();
                         $.ajax({
                             url: url,
                             type: 'POST'
